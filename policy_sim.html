@@ -90,22 +90,15 @@
   var START=100, REGEN=0.5, CAP=100, DAYS=5;
   var closed={1:false,2:false,3:false,4:false,5:false};
 
+  function toggleDay(d){ closed[d]=!closed[d]; update(); }
   function buildDays(){
     var box=document.getElementById('days'); box.innerHTML='';
-    for(var d=1; d<=DAYS; d++){ (function(d){
+    for(var d=1; d<=DAYS; d++){
       var el=document.createElement('button');
-      el.type='button'; el.className='day'; el.textContent=d+'일'; el.setAttribute('data-day',d);
+      el.type='button'; el.className='day'; el.textContent=d+'일';
+      el.setAttribute('data-day',d);
+      el.setAttribute('onclick','toggleDay('+d+')');
       box.appendChild(el);
-    })(d); }
-    // 컨테이너 전체에서 탭/클릭 감지(버튼 위 투명 요소가 있어도 확실히 동작)
-    if(!box._bound){
-      box._bound=true;
-      var handler=function(ev){
-        var t=ev.target; while(t && t!==box && !t.getAttribute('data-day')){ t=t.parentNode; }
-        if(t && t.getAttribute){ var d=Number(t.getAttribute('data-day')); if(d){ ev.preventDefault(); closed[d]=!closed[d]; update(); } }
-      };
-      box.addEventListener('click', handler);
-      box.addEventListener('touchend', handler);
     }
     syncDayButtons();
   }
