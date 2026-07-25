@@ -94,13 +94,21 @@
   function buildDays(){
     var box=document.getElementById('days'); box.innerHTML='';
     for(var d=1; d<=DAYS; d++){
-      var el=document.createElement('button');
-      el.type='button'; el.className='day'; el.textContent=d+'일';
-      el.setAttribute('data-day',d);
-      el.setAttribute('onclick','toggleDay('+d+')');
+      var el=document.createElement('div');
+      el.className='day'; el.textContent=d+'일';
+      el.setAttribute('data-day',d); el.setAttribute('role','button');
       box.appendChild(el);
     }
     syncDayButtons();
+  }
+  // 문서 전체에서 캡처 단계로 감지(확장프로그램/오버레이보다 먼저 잡음)
+  if(!window._dayTap){
+    window._dayTap=true;
+    document.addEventListener('click', function(ev){
+      var t=ev.target;
+      while(t && t.nodeType===1 && !t.getAttribute('data-day')) t=t.parentElement;
+      if(t && t.getAttribute && t.getAttribute('data-day')){ toggleDay(Number(t.getAttribute('data-day'))); }
+    }, true);
   }
   function syncDayButtons(){
     var btns=document.querySelectorAll('#days .day');
