@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>등대말 · 어장 · 학생</title>
+<style>
+  :root{ --navy:#0e2436; --amber:#f2a53c; --ok:#3ecf8e; --bad:#e2574c; --teal:#39c2c9; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+    background:linear-gradient(180deg,#0b2a33,#0e5563); color:#eaf7f6; min-height:100vh;}
+  .wrap{max-width:460px; margin:0 auto; padding:18px 16px 40px; min-height:100vh; display:flex; flex-direction:column;}
+  .screen{display:none; flex:1;} .screen.on{display:flex; flex-direction:column;}
+  h1{font-size:20px; margin:4px 0 2px; text-align:center;}
+  .lead{text-align:center; color:#a9d6d6; font-size:13px; margin-bottom:14px;}
+  .card{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px; margin-bottom:12px;}
+  label{display:block; font-weight:700; font-size:13px; margin:10px 0 6px; color:#cfeeee;}
+  input,select{width:100%; padding:12px; font-size:16px; border:none; border-radius:10px; background:#f2f7f6; color:#12333a;}
+  .avatars{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
+  .avatars button{font-size:28px; width:56px; height:56px; padding:0; background:rgba(255,255,255,.08); border:2px solid transparent; border-radius:12px;}
+  .avatars button.sel{border-color:var(--teal); background:rgba(57,194,201,.18);}
+  .btn{width:100%; padding:15px; font-size:17px; font-weight:800; border:none; border-radius:12px; background:var(--teal); color:#03252a; cursor:pointer; margin-top:8px;}
+  .btn:active{transform:translateY(1px);} .btn:disabled{opacity:.5;}
+  .err{background:rgba(226,87,76,.2); border:1px solid rgba(226,87,76,.5); color:#ffd7d3; padding:10px; border-radius:10px; font-size:13px; margin-top:10px; display:none;}
+  .center{text-align:center;}
+  .big-avatar{font-size:52px; margin:6px 0;}
+  .count{font-size:40px; font-weight:900; margin:6px 0;}
+  .avatar-row{font-size:30px; letter-spacing:6px; min-height:40px; margin:8px 0;}
+  .story{font-size:14px; line-height:1.7; color:#e7f5f5; text-align:left;} .story b{color:var(--amber);}
+  .rules{font-size:13px; color:#cfeeee; text-align:left; line-height:1.7;}
+  .timer{font-size:46px; font-weight:900; text-align:center; margin:2px 0 8px; font-variant-numeric:tabular-nums;}
+  .timer.low{color:var(--bad);}
+  .stock-banner{text-align:center; font-size:15px; margin:2px 0 6px;}
+  .stock-banner b{font-size:30px; color:var(--teal);}
+  .amount-input{display:flex; align-items:center; justify-content:center; gap:8px; margin:8px 0 4px;}
+  .amount-input input{width:150px; text-align:center; font-size:44px; font-weight:900; color:var(--teal);
+    background:#062b30; border:2px solid rgba(255,255,255,.18); border-radius:14px; padding:12px 8px;}
+  .amount-input input::-webkit-outer-spin-button,.amount-input input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .amount-input input{-moz-appearance:textfield;}
+  .unit{font-size:20px; color:#cfeeee;}
+  .stepper{display:flex; gap:8px; margin-top:10px;}
+  .stepper button{flex:1; padding:12px; border:none; border-radius:10px; background:rgba(255,255,255,.12); color:#eaf7f6; font-weight:800; font-size:18px;}
+  .result-row{display:flex; justify-content:space-between; padding:10px 2px; border-bottom:1px solid rgba(255,255,255,.1); font-size:15px;}
+  .result-row b{font-size:16px;}
+  .verdict{text-align:center; font-size:20px; font-weight:900; padding:14px; border-radius:12px; margin:10px 0;}
+  .verdict.ok{background:rgba(62,207,142,.18); color:#7ff0bd;}
+  .verdict.bad{background:rgba(226,87,76,.18); color:#ffb0a9;}
+  .wait-note{text-align:center; color:#a9d6d6; font-size:14px; margin-top:12px;}
+  .pill{display:inline-block; background:rgba(57,194,201,.2); color:var(--teal); padding:3px 12px; border-radius:20px; font-size:13px; font-weight:700; margin-bottom:6px;}
+  .trend{font-size:14px; line-height:2;}
+  .fishbar{height:14px; background:#062b30; border-radius:8px; overflow:hidden; margin-top:8px;}
+  .fishbar > div{height:100%; background:linear-gradient(90deg,#39c2c9,#7ff0bd);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="screen on" id="urlScreen">
+    <h1>🎣 등대말 어장</h1>
+    <p class="lead">선생님이 알려준 접속 주소를 붙여넣으세요.</p>
+    <div class="card"><label>웹 앱 URL</label>
+      <input type="text" id="url" placeholder="https://script.google.com/.../exec">
+      <button class="btn" onclick="saveUrl()">시작</button></div>
+  </div>
+
+  <div class="screen" id="joinScreen">
+    <h1>🎣 등대말 어장</h1>
+    <p class="lead">등대가 세워진 뒤, 이제 앞바다로 나갑니다</p>
+    <div class="card">
+      <label>반</label><select id="sSession"><option>1반</option><option>2반</option><option>3반</option><option>4반</option><option>5반</option><option>6반</option><option>7반</option><option>8반</option><option>9반</option><option>10반</option></select>
+      <label>모둠</label><select id="sGroup"></select>
+      <label>학번</label><input type="text" id="sId" inputmode="numeric" placeholder="예: 10312">
+      <label>아바타</label><div class="avatars" id="avatarGrid"></div>
+      <button class="btn" onclick="checkin()">입장하기</button>
+      <div class="err" id="joinErr"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="waitScreen">
+    <div class="card center">
+      <div class="big-avatar" id="waitAvatar"></div>
+      <div class="pill" id="waitLabel"></div>
+      <div class="count"><span id="waitCount">0</span> / <span id="waitCap">0</span> 명</div>
+      <div class="avatar-row" id="waitAvatars"></div>
+      <div class="wait-note" id="waitNote">모둠원이 다 들어오길 기다리는 중…</div>
+    </div>
+    <div class="card"><p class="story">
+      등대가 세워져 배가 안전해졌어요. 이제 마을은 앞바다 <b>공동 어장</b>에서 물고기를 잡습니다.
+      어장은 <b>모두의 것</b>. 많이 잡으면 당장 이득이지만, 물고기가 남아 있어야 <b>다음에 새끼가 늘어나요</b>.
+      다 같이 너무 많이 잡으면 어장이 텅 비어 <b>아무도 못 잡게</b> 됩니다.
+    </p></div>
+    <div class="card"><div class="rules" id="rulesText"></div></div>
+  </div>
+
+  <div class="screen" id="inputScreen">
+    <div class="center"><span class="pill" id="inRound"></span></div>
+    <div class="timer" id="timer">30</div>
+    <div class="card">
+      <div class="stock-banner">지금 어장에 <b id="curStock">0</b> 마리</div>
+      <div class="fishbar"><div id="curBar" style="width:0%"></div></div>
+      <p class="lead" style="margin:12px 0 2px;">몇 마리를 잡을까요? <b style="color:#39c2c9;">(0~10마리)</b></p>
+      <div class="amount-input">
+        <input type="number" id="amountInput" inputmode="numeric" min="0" max="10" step="1" placeholder="0" oninput="onAmount()">
+        <span class="unit">마리</span>
+      </div>
+      <div class="stepper"><button onclick="stepAmount(-1)">− 1</button><button onclick="stepAmount(1)">＋ 1</button></div>
+      <div class="err" id="inputErr"></div>
+      <button class="btn" onclick="submitHarvest()">조업 확정</button>
+      <p class="lead" id="ruleMini" style="margin:12px 0 0; font-size:12px;"></p>
+    </div>
+  </div>
+
+  <div class="screen" id="collapsedInputScreen">
+    <div class="card center">
+      <div class="big-avatar">🪸</div>
+      <div class="pill" id="colRound"></div>
+      <h1 style="margin:8px 0;">어장이 텅 비었어요</h1>
+      <div class="timer" id="colTimer" style="font-size:30px;">30</div>
+      <div class="wait-note">잡을 물고기가 없습니다. 이번 일차는 조업 0마리로 넘어가요.</div>
+    </div>
+  </div>
+
+  <div class="screen" id="submittedScreen">
+    <div class="card center">
+      <div class="big-avatar">🤫</div>
+      <div class="pill" id="subRound"></div>
+      <h1 style="margin:10px 0;">조업 확정!</h1>
+      <div class="timer" id="subTimer" style="font-size:30px;">30</div>
+      <div class="wait-note">모두의 마감을 기다리는 중… (개인 어획량은 비밀)</div>
+    </div>
+  </div>
+
+  <div class="screen" id="revealScreen">
+    <div class="center"><span class="pill" id="revRound"></span></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="card">
+      <div class="result-row"><span>일차 시작 어장</span><b id="rStart">0마리</b></div>
+      <div class="result-row"><span>우리 모둠 총 어획</span><b id="rCaught">0마리</b></div>
+      <div class="result-row"><span>남은 어장</span><b id="rRemain">0마리</b></div>
+      <div class="result-row"><span>번식 후 다음 어장</span><b id="rNext">0마리</b></div>
+      <div class="result-row"><span>나의 이번 어획 / 누적</span><b id="rMine">0 / 0마리</b></div>
+    </div>
+    <div class="wait-note" id="revNote">선생님이 다음 일차를 시작하길 기다리는 중…</div>
+  </div>
+
+  <div class="screen" id="finalScreen">
+    <h1 class="center">🐟 조업 종료</h1>
+    <div class="card"><div class="trend" id="finalTrend"></div></div>
+    <div class="card center"><p class="lead" style="margin:0;">이제 화면을 선생님께 향하고, 전체 어장 결과를 함께 살펴봐요.</p></div>
+  </div>
+
+</div>
+
+<script>
+  /* ===== 설정 ===== */
+  var DEFAULT_URL = "https://script.google.com/macros/s/AKfycbyxmMVmdWUdtvvmwy1TPnXZ78elB2zQhkQdLUtzZZBlRFatWqTlfljRTb-PYmAbKrY/exec";            // 어장 배포 URL을 넣으면 URL 입력화면 생략
+  var INIT_STOCK=100, MAX_PER=10, REGEN=0.5, CAP=100, COUNTDOWN=30;
+  var ROUNDS=['어장1','어장2','어장3','어장4','어장5'];
+  var AVATARS=['🐟','🦀','🐙','🐬','🦑','🦈','🐠','🦞','🐡','🐳'];
+  var GROUPS=['1모둠','2모둠','3모둠','4모둠','5모둠','6모둠'];
+
+  var URL="", me=null, clockOffset=0, poll=null, ticker=null, last={};
+  var clientRound="", submittedRound=null, myHarvest=0, autoSentRound=null;
+  var allData=[], selectedAvatar='';
+
+  function $(id){return document.getElementById(id);}
+  function show(id){ ['urlScreen','joinScreen','waitScreen','inputScreen','collapsedInputScreen','submittedScreen','revealScreen','finalScreen']
+      .forEach(function(s){ $(s).classList.toggle('on', s===id); }); }
+  function serverNow(){ return Date.now()+clockOffset; }
+  async function post(action,payload){ var r=await fetch(URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload))}); return JSON.parse(await r.text()); }
+  async function getQ(params){ var qs=Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&');
+    var r=await fetch(URL+(URL.indexOf('?')>=0?'&':'?')+qs); return JSON.parse(await r.text()); }
+
+  function saveUrl(){ var u=$('url').value.trim(); if(!u) return; URL=u; try{localStorage.setItem('fish_url',u);}catch(e){} initJoin(); }
+  function initJoin(){
+    var grid=$('avatarGrid'); grid.innerHTML='';
+    AVATARS.forEach(function(a){ var b=document.createElement('button'); b.textContent=a;
+      b.onclick=function(){ selectedAvatar=a; document.querySelectorAll('#avatarGrid button').forEach(function(x){x.classList.remove('sel');}); b.classList.add('sel'); };
+      grid.appendChild(b); });
+    var g=$('sGroup'); g.innerHTML=''; GROUPS.forEach(function(x){ var o=document.createElement('option'); o.textContent=x; g.appendChild(o); });
+    try{ var saved=JSON.parse(localStorage.getItem('fish_me')||'null'); }catch(e){ saved=null; }
+    if(saved){ me=saved; startLoops(); show('waitScreen'); } else show('joinScreen');
+  }
+
+  async function checkin(){
+    var session=$('sSession').value, group=$('sGroup').value, sid=$('sId').value.trim();
+    if(!sid){ err('joinErr','학번을 입력하세요.'); return; }
+    if(!selectedAvatar){ err('joinErr','아바타를 골라주세요.'); return; }
+    try{
+      var r=await post('checkin',{session:session,group:group,studentId:sid,avatar:selectedAvatar});
+      if(!r.ok){ err('joinErr',r.error||'오류'); return; }
+      me={session:session,group:group,studentId:sid,avatar:selectedAvatar};
+      try{ localStorage.setItem('fish_me',JSON.stringify(me)); }catch(e){}
+      $('waitAvatar').textContent=me.avatar; $('waitLabel').textContent=me.session+' '+me.group;
+      startLoops(); show('waitScreen');
+    }catch(e){ err('joinErr','연결 실패: '+e.message); }
+  }
+  function err(id,msg){ var el=$(id); el.style.display='block'; el.textContent=msg; }
+
+  /* ===== 루프 ===== */
+  function startLoops(){ stopLoops(); pollOnce(); poll=setInterval(pollOnce,1200); ticker=setInterval(render,250); }
+  function stopLoops(){ if(poll)clearInterval(poll); if(ticker)clearInterval(ticker); poll=ticker=null; }
+  async function pollOnce(){
+    if(!me) return;
+    try{
+      var st=await getQ({action:'lobby',session:me.session,group:me.group});
+      if(st&&st.ok){ last=st; clockOffset=st.serverNow-Date.now(); }
+      // 어장 계산을 위해 우리 모둠 전체 응답을 항상 가져옴
+      var r=await getQ({action:'',session:me.session,group:me.group});
+      if(r&&r.ok) allData=r.data||[];
+    }catch(e){}
+  }
+
+  /* ===== 어장 계산(응답 기반 결정론적 재생) ===== */
+  function byRound(){
+    var m={}; allData.forEach(function(d){ (m[d.round]=m[d.round]||[]).push({studentId:d.studentId, h:clampH(d.contribution)}); }); return m;
+  }
+  function clampH(v){ v=Math.floor(Number(v)||0); return Math.max(0,Math.min(MAX_PER,v)); }
+  function roundOutcome(round, startStock){
+    var reqs=(byRound()[round])||[];
+    var totalReq=0; reqs.forEach(function(d){ totalReq+=d.h; });
+    var byId={}, caught=0;
+    if(startStock<=0){ reqs.forEach(function(d){ byId[d.studentId]=0; }); }
+    else if(totalReq<=startStock){ reqs.forEach(function(d){ byId[d.studentId]=d.h; caught+=d.h; }); }
+    else { reqs.forEach(function(d){ var a=Math.floor(d.h*startStock/totalReq); byId[d.studentId]=a; caught+=a; }); }
+    var remaining=Math.max(0,startStock-caught);
+    var nextStock=Math.min(CAP, remaining+Math.floor(remaining*REGEN));
+    return {startStock:startStock, totalReq:totalReq, caught:caught, remaining:remaining, nextStock:nextStock, byId:byId};
+  }
+  function stockAtStart(roundIndex){ var s=INIT_STOCK; for(var i=0;i<roundIndex;i++){ s=roundOutcome(ROUNDS[i],s).nextStock; } return s; }
+  function myCumulative(uptoIndex){ var t=0; for(var i=0;i<=uptoIndex;i++){ var o=roundOutcome(ROUNDS[i], stockAtStart(i)); t+=(o.byId[me.studentId]||0); } return t; }
+
+  /* ===== 렌더링 ===== */
+  function render(){
+    if(!me||!last.phase) return;
+    if(last.phase==='waiting'||last.phase==='ready'){
+      $('waitAvatar').textContent=me.avatar; $('waitLabel').textContent=me.session+' '+me.group;
+      $('waitCount').textContent=last.count; $('waitCap').textContent=last.capacity;
+      $('waitAvatars').textContent=(last.avatars||[]).join(' ');
+      $('rulesText').innerHTML=rulesHtml();
+      $('waitNote').innerHTML=(last.phase==='ready')
+        ? '🎉 모두 모였어요! <b style="color:#f2a53c;">선생님이 시작하면</b> 조업이 시작됩니다.<br>그동안 규칙을 읽어두세요.'
+        : '모둠원이 다 들어오길 기다리는 중…';
+      show('waitScreen'); return;
+    }
+    if(last.phase==='done'){ renderFinal(); show('finalScreen'); return; }
+    if(last.phase==='playing'){
+      var round=last.round, idx=ROUNDS.indexOf(round);
+      if(round!==clientRound){
+        clientRound=round; submittedRound=null; myHarvest=0; autoSentRound=null;
+        if($('amountInput')){ $('amountInput').value=''; } if($('inputErr')) $('inputErr').style.display='none';
+        $('inRound').textContent=roundLabel(round); $('colRound').textContent=roundLabel(round);
+        $('subRound').textContent=roundLabel(round); $('revRound').textContent=roundLabel(round);
+      }
+      var deadline=last.roundStartedAt+COUNTDOWN*1000;
+      var remain=Math.max(0,Math.ceil((deadline-serverNow())/1000));
+      var startStock=stockAtStart(idx);
+
+      if(submittedRound!==round){
+        if(remain>0){
+          if(startStock<=0){ // 어장 붕괴 상태 → 자동 0
+            if(autoSentRound!==round){ autoSentRound=round; sendHarvest(0,round); }
+            submittedRound=round; myHarvest=0;
+            updateTimer('colTimer',remain); show('collapsedInputScreen'); return;
+          }
+          updateTimer('timer',remain);
+          $('curStock').textContent=startStock;
+          $('curBar').style.width=Math.round(startStock/CAP*100)+'%';
+          $('ruleMini').textContent='적게 잡을수록 어장이 회복돼요 · 미입력은 0마리';
+          show('inputScreen'); return;
+        }else{
+          if(autoSentRound!==round){ autoSentRound=round; sendHarvest(0,round); }
+          submittedRound=round; myHarvest=0; showReveal(idx); return;
+        }
+      }else{
+        if(remain>0){
+          if(startStock<=0){ updateTimer('colTimer',remain); show('collapsedInputScreen'); return; }
+          updateTimer('subTimer',remain); show('submittedScreen'); return;
+        }
+        else{ showReveal(idx); return; }
+      }
+    }
+  }
+  function updateTimer(id,remain){ var el=$(id); el.textContent=remain; el.classList.toggle('low',remain<=10); }
+
+  /* ===== 입력/제출 ===== */
+  function onAmount(){ var v=$('amountInput').value; myHarvest=(v===''?0:Number(v)); }
+  function stepAmount(d){ var cur=Number($('amountInput').value)||0; var n=Math.min(MAX_PER,Math.max(0,cur+d)); $('amountInput').value=n; myHarvest=n; $('inputErr').style.display='none'; }
+  function submitHarvest(){
+    var raw=$('amountInput').value.trim(), v=Number(raw);
+    if(raw===''||isNaN(v)){ err('inputErr','잡을 마리 수를 입력하세요.'); return; }
+    if(v<0||v>MAX_PER){ err('inputErr','0~10마리 사이로 입력하세요.'); return; }
+    if(v%1!==0){ err('inputErr','정수(마리)로 입력하세요.'); return; }
+    $('inputErr').style.display='none'; myHarvest=v;
+    submittedRound=last.round; sendHarvest(v,last.round); render();
+  }
+  async function sendHarvest(amount,round){
+    try{ await post('submit',{records:[{session:me.session,group:me.group,round:round,studentId:me.studentId,contribution:amount}]});
+      // 방금 낸 것을 즉시 반영(다음 폴링 전 계산 정확도)
+      allData.push({session:me.session,group:me.group,round:round,studentId:me.studentId,contribution:amount});
+    }catch(e){}
+  }
+
+  /* ===== 결과 표시 ===== */
+  function showReveal(idx){
+    var o=roundOutcome(ROUNDS[idx], stockAtStart(idx));
+    var collapsed=o.nextStock<=0;
+    $('verdict').className='verdict '+(collapsed?'bad':'ok');
+    $('verdict').textContent=collapsed?'🪸 어장이 붕괴했어요!':'🐟 어장이 유지됐어요';
+    $('rStart').textContent=o.startStock+'마리';
+    $('rCaught').textContent=o.caught+'마리';
+    $('rRemain').textContent=o.remaining+'마리';
+    $('rNext').textContent=o.nextStock+'마리 (번식 +'+(o.nextStock-o.remaining)+')';
+    var mine=o.byId[me.studentId]||0;
+    $('rMine').textContent=mine+' / '+myCumulative(idx)+'마리';
+    show('revealScreen');
+  }
+  function renderFinal(){
+    var html='', s=INIT_STOCK;
+    for(var i=0;i<ROUNDS.length;i++){
+      var o=roundOutcome(ROUNDS[i], s);
+      if(o.totalReq===0 && i>0 && !hasRound(ROUNDS[i])){ break; }
+      html+='<div class="result-row"><span>'+(i+1)+'일차</span><b>시작 '+o.startStock+' → 어획 '+o.caught+' → 남음 '+o.remaining+'</b></div>';
+      s=o.nextStock;
+    }
+    html+='<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;">'
+        + '나의 누적 어획(수익): <b style="color:#39c2c9;">'+myCumulative(ROUNDS.length-1)+'마리</b><br>'
+        + '마지막 어장: <b>'+s+'마리</b> '+(s<=0?'🪸 붕괴':'🐟 유지')+'</div>';
+    $('finalTrend').innerHTML=html;
+  }
+  function hasRound(round){ return allData.some(function(d){ return d.round===round; }); }
+
+  /* ===== 텍스트 ===== */
+  function roundLabel(r){ var i=ROUNDS.indexOf(r); return i>=0?((i+1)+'일차 조업'):r; }
+  function rulesHtml(){
+    return '📜 <b style="color:#f2a53c;">규칙</b><br>'
+      +'· 공동 어장에 물고기 <b>100마리</b>로 시작<br>'
+      +'· 매 일차 각자 <b>0~10마리</b> 비밀 조업<br>'
+      +'· 조업 후 <b>남은 물고기의 50%가 번식</b> (최대 100마리)<br>'
+      +'· 어장이 <b>0이 되면 붕괴</b> → 이후엔 못 잡음<br>'
+      +'· 30초, 미입력은 0마리 · <b>5일 동안</b> 최대한 많이 잡되 어장을 지키기';
+  }
+
+  /* ===== 시작 ===== */
+  (function(){
+    try{ var u=localStorage.getItem('fish_url'); }catch(e){ u=null; }
+    if(DEFAULT_URL){ URL=DEFAULT_URL; initJoin(); }
+    else if(u){ URL=u; $('url').value=u; initJoin(); }
+    else show('urlScreen');
+  })();
+</script>
+</body>
+</html>
