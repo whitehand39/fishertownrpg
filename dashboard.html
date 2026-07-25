@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>등대말 · 결과 대시보드</title>
+<style>
+  :root{ --amber:#f2a53c; --teal:#0e8c94; --ok:#1f8f4e; --bad:#d0503a; --ink:#12303a; --line:#dbe6e8; }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif; margin:0; background:#eef4f5; color:var(--ink);}
+  .wrap{max-width:1120px; margin:0 auto; padding:20px 18px 70px;}
+  h1{font-size:24px; margin:0 0 4px;}
+  h2{font-size:19px; margin:26px 0 10px;}
+  .sub{color:#5a747c; font-size:13px; margin:0 0 16px;}
+  .card{background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px;}
+  label{display:block; font-weight:700; font-size:12.5px; margin:8px 0 5px;}
+  input,select{padding:9px 10px; font-size:14px; border:1px solid #bcd3d6; border-radius:8px;}
+  input{width:100%;} select{min-width:120px;}
+  button{padding:11px 18px; font-size:15px; font-weight:800; border:none; border-radius:9px; cursor:pointer; color:#fff; background:var(--teal);}
+  .setup-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:640px){ .setup-grid{grid-template-columns:1fr;} }
+  .bar{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:6px;}
+  .summary{display:flex; gap:14px; flex-wrap:wrap;}
+  .stat{flex:1; min-width:150px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; text-align:center;}
+  .stat .num{font-size:32px; font-weight:900; line-height:1.1;}
+  .stat .lab{font-size:13px; color:#5a747c; margin-top:4px;}
+  .stat.good .num{color:var(--ok);} .stat.bad .num{color:var(--bad);} .stat.amber .num{color:var(--amber);} .stat.teal .num{color:var(--teal);}
+  /* 모둠 카드 */
+  .gcard{border:1px solid var(--line); border-radius:14px; padding:14px 16px; background:#fff; margin-bottom:12px;}
+  .ghead{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
+  .ghead .gname{font-size:17px; font-weight:800;}
+  .ghead .gsum{font-size:13px; font-weight:700;}
+  .tag{font-size:12px; font-weight:800; padding:3px 10px; border-radius:20px;}
+  .tag.ok{background:#e3f5ea; color:var(--ok);} .tag.bad{background:#fbe6e1; color:var(--bad);} .tag.none{background:#eef2f4; color:#8aa0a6;}
+  .rblock{border-top:1px solid #eef3f4; padding:9px 0;}
+  .rline{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;}
+  .rname{font-weight:800; font-size:14px;}
+  .rmeta{font-size:13px; color:#3a5560; font-variant-numeric:tabular-nums;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:7px;}
+  .chip{font-size:12.5px; background:#f2f7f8; border:1px solid #e2ecee; border-radius:8px; padding:3px 8px; font-variant-numeric:tabular-nums;}
+  .chip b{color:#0a6a70;}
+  .chip.zero b{color:#b06a1a;}
+  /* 어장 게이지 */
+  .gauge{height:10px; background:#eef3f4; border-radius:6px; overflow:hidden; margin-top:6px; max-width:260px;}
+  .gauge>div{height:100%;}
+  .gauge>div.hi{background:linear-gradient(90deg,#39c2c9,#1f8f4e);}
+  .gauge>div.mid{background:linear-gradient(90deg,#f2a53c,#e0a020);}
+  .gauge>div.lo{background:linear-gradient(90deg,#d0503a,#a83a28);}
+  /* 매트릭스 */
+  .matrix{display:grid; grid-template-columns:120px 1fr 1fr; gap:8px;}
+  .mh{background:#e9f0f1; border-radius:8px; padding:12px; font-weight:800; text-align:center; display:flex; align-items:center; justify-content:center; font-size:13px;}
+  .mcell{border-radius:10px; padding:14px; min-height:96px; border:2px solid transparent; background:#f7fafa;}
+  .mcell .t{font-weight:800; font-size:15px;} .mcell .d{font-size:12.5px; color:#5a747c; margin-top:4px; line-height:1.5;}
+  .mcell.lh{border-color:var(--amber); background:#fff;} .mcell.fish{border-color:var(--teal); background:#fff;}
+  .badge{display:inline-block; font-size:11.5px; font-weight:800; padding:2px 8px; border-radius:12px; margin-top:6px;}
+  .badge.lh{background:#fdefda; color:#9a6410;} .badge.fish{background:#dcf0f1; color:#0a6a70;}
+  small.hint{color:#5a747c; font-size:12.5px; display:block; margin-top:8px;}
+  .empty{color:#8aa0a6; font-size:14px; padding:10px 0;}
+  .note{background:#fdf6e9; border:1px solid #f0dfba; color:#8a6410; font-size:12.5px; padding:9px 12px; border-radius:8px; margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏛️ 등대말 · 결과 대시보드</h1>
+  <p class="sub">모둠별·라운드별·학생별 상세 결과와 정리용 매트릭스. 교사 전용 화면입니다.</p>
+
+  <div class="card">
+    <div class="setup-grid">
+      <div><label>🛟 등대(공공재) 웹 앱 URL</label><input type="text" id="lhUrl" placeholder="등대 .../exec"></div>
+      <div><label>🎣 어장(공유자원) 웹 앱 URL</label><input type="text" id="fishUrl" placeholder="어장 .../exec"></div>
+    </div>
+    <div class="bar" style="margin-top:12px;">
+      <div><label>세션(반)</label><select id="session"><option>1반</option><option>2반</option><option>3반</option><option>4반</option><option>5반</option><option>6반</option><option>7반</option><option>8반</option><option>9반</option><option>10반</option></select></div>
+      <button onclick="loadAll()">🔄 결과 불러오기 / 새로고침</button>
+    </div>
+    <small class="hint">한쪽 URL만 넣으면 그 게임만 표시됩니다.</small>
+    <div id="msg" style="display:none; margin-top:8px; font-size:13px;"></div>
+  </div>
+
+  <div class="note">⚠️ 이 화면은 <b>학번별 개별 값</b>이 보입니다(교사 전용). 학생에게 투사할 땐 개인 비교로 특정 학생을 지목하지 않도록 주의하세요 — "개인이 아닌 제도의 문제"임을 강조합니다.</div>
+
+  <h2>📊 학급 요약</h2>
+  <div class="summary" id="summary"><div class="empty">위에서 URL을 넣고 "결과 불러오기"를 누르세요.</div></div>
+
+  <h2>🛟 등대 — 공공재 게임 (모둠별·라운드별)</h2>
+  <div id="lhSection"><div class="empty">등대 데이터 없음</div></div>
+
+  <h2>🎣 어장 — 공유지의 비극 (모둠별·일차별)</h2>
+  <div id="fishSection"><div class="empty">어장 데이터 없음</div></div>
+
+  <h2>🧭 정리 — 배제성 × 경합성</h2>
+  <div class="card">
+    <div class="matrix">
+      <div class="mh"></div>
+      <div class="mh">경합성 있음<br><span style="font-weight:600;font-size:12px;">(내가 쓰면 남의 몫↓)</span></div>
+      <div class="mh">경합성 없음<br><span style="font-weight:600;font-size:12px;">(같이 써도 몫 그대로)</span></div>
+      <div class="mh">배제성 있음<br><span style="font-weight:600;font-size:12px;">(돈 내야 사용)</span></div>
+      <div class="mcell"><div class="t">사적재</div><div class="d">예: 아이스크림, 옷 · 시장이 잘 공급</div></div>
+      <div class="mcell"><div class="t">요금재(클럽재)</div><div class="d">예: 유료 도로, 넷플릭스</div></div>
+      <div class="mh">배제성 없음<br><span style="font-weight:600;font-size:12px;">(막을 수 없음)</span></div>
+      <div class="mcell fish"><div class="t">🎣 공유 자원</div><div class="d">막을 수 없고 + 내가 잡으면 남의 몫↓ → <b>남획·고갈</b></div><span class="badge fish">우리 어장 게임</span></div>
+      <div class="mcell lh"><div class="t">🛟 공공재</div><div class="d">막을 수 없고 + 같이 써도 안 줆 → <b>무임승차·과소공급</b></div><span class="badge lh">우리 등대 게임</span></div>
+    </div>
+    <small class="hint">등대(공공재)는 "안 내도 혜택"→과소 공급, 어장(공유자원)은 "남이 잡으면 내 몫↓"→과잉 사용·고갈. 두 방향의 시장 실패를 방금 게임으로 겪었습니다.</small>
+  </div>
+</div>
+
+<script>
+  var LH_ROUNDS=['자율1','자율2'], PER_CAP=50, INIT=100, BENEFIT=120;
+  var FISH_ROUNDS=['어장1','어장2','어장3','어장4','어장5'], INIT_STOCK=100, MAX_PER=10, REGEN=0.5, CAP=100;
+
+  var lhUrl=document.getElementById('lhUrl'), fishUrl=document.getElementById('fishUrl');
+  try{ lhUrl.value=localStorage.getItem('lh_url')||''; fishUrl.value=localStorage.getItem('fish_url')||''; }catch(e){}
+  function msg(t,ok){ var el=document.getElementById('msg'); el.style.display='block'; el.style.color=ok?'#1d6b3a':'#a12626'; el.textContent=t; }
+  async function getQ(url,params){ var qs=Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&');
+    var res=await fetch(url+(url.indexOf('?')>=0?'&':'?')+qs); return JSON.parse(await res.text()); }
+
+  async function loadAll(){
+    var session=document.getElementById('session').value;
+    var lu=lhUrl.value.trim(), fu=fishUrl.value.trim();
+    try{ if(lu) localStorage.setItem('lh_url',lu); if(fu) localStorage.setItem('fish_url',fu); }catch(e){}
+    msg('불러오는 중…', true);
+    var lh=null, fish=null;
+    if(lu){ try{ lh=await loadGame(lu,session);}catch(e){ msg('등대 실패: '+e.message,false);} }
+    if(fu){ try{ fish=await loadGame(fu,session);}catch(e){ msg('어장 실패: '+e.message,false);} }
+    if(lu||fu) msg('✅ 불러왔습니다. ('+session+')', true);
+    renderLighthouse(lh); renderFishery(fish); renderSummary(lh, fish);
+  }
+  async function loadGame(url, session){
+    var roster=await getQ(url,{action:'roster',session:session});
+    var resp=await getQ(url,{session:session});
+    var capMap={}; (roster.data||[]).forEach(function(x){capMap[x.group]=Number(x.capacity)||0;});
+    var groups=(roster.data||[]).map(function(x){return x.group;});
+    var rowsByGroup={}; (resp.data||[]).forEach(function(d){ (rowsByGroup[d.group]=rowsByGroup[d.group]||[]).push(d); });
+    return {groups:groups, capMap:capMap, rowsByGroup:rowsByGroup};
+  }
+  function sortById(a,b){ return String(a.id).localeCompare(String(b.id),undefined,{numeric:true}); }
+
+  /* ===== 등대 상세 ===== */
+  function lhDetail(rows, cap){
+    var byR={}; (rows||[]).forEach(function(d){ (byR[d.round]=byR[d.round]||[]).push({id:d.studentId, val:Number(d.contribution)||0}); });
+    var target=cap*PER_CAP, rounds=[], buildRounds=[];
+    LH_ROUNDS.forEach(function(r,i){
+      var list=byR[r]; if(!list){ rounds.push(null); return; }
+      list.sort(sortById);
+      var total=list.reduce(function(s,x){return s+x.val;},0);
+      var built=target>0 && total>=target; if(built) buildRounds.push(i+1);
+      rounds.push({list:list,total:total,built:built});
+    });
+    return {target:target, rounds:rounds, buildRounds:buildRounds};
+  }
+  function renderLighthouse(g){
+    var box=document.getElementById('lhSection');
+    if(!g||!g.groups.length){ box.innerHTML='<div class="empty">등대 데이터 없음</div>'; return; }
+    var html='';
+    g.groups.forEach(function(gr){
+      var d=lhDetail(g.rowsByGroup[gr], g.capMap[gr]||0);
+      var sum = d.buildRounds.length? '<span class="tag ok">'+d.buildRounds.join('·')+'라운드 건설</span>' : '<span class="tag bad">미건설</span>';
+      html+='<div class="gcard"><div class="ghead"><span class="gname">'+gr+'</span>'
+          +'<span class="gsum">목표 '+d.target+'냥 · '+sum+'</span></div>';
+      d.rounds.forEach(function(r,i){
+        html+='<div class="rblock"><div class="rline"><span class="rname">'+(i+1)+'라운드</span>';
+        if(!r){ html+='<span class="rmeta">–</span></div></div>'; return; }
+        html+='<span class="rmeta">합계 '+r.total+' / '+d.target+'냥 · '+(r.built?'건설 ✅':'실패 ❌')+'</span></div>';
+        html+='<div class="chips">'+r.list.map(function(x){ return '<span class="chip'+(x.val===0?' zero':'')+'">'+x.id+' <b>'+x.val+'</b></span>'; }).join('')+'</div></div>';
+      });
+      html+='</div>';
+    });
+    box.innerHTML=html;
+  }
+
+  /* ===== 어장 상세 ===== */
+  function clampH(v){ v=Math.floor(Number(v)||0); return Math.max(0,Math.min(MAX_PER,v)); }
+  function fishDetail(rows){
+    var byR={}; (rows||[]).forEach(function(d){ (byR[d.round]=byR[d.round]||[]).push({id:d.studentId, val:clampH(d.contribution)}); });
+    var s=INIT_STOCK, rounds=[], played=0;
+    for(var i=0;i<FISH_ROUNDS.length;i++){
+      var list=byR[FISH_ROUNDS[i]]; if(!list){ rounds.push(null); continue; }
+      played++; list.sort(sortById);
+      var totalInput=list.reduce(function(t,x){return t+x.val;},0);
+      var caught=s<=0?0:Math.min(totalInput,s);
+      var remaining=Math.max(0,s-caught);
+      var nextStock=Math.min(CAP, remaining+Math.floor(remaining*REGEN));
+      rounds.push({list:list,startStock:s,totalInput:totalInput,caught:caught,remaining:remaining,nextStock:nextStock,pct:Math.round(nextStock/CAP*100),over:totalInput>s});
+      s=nextStock;
+    }
+    return {rounds:rounds, finalStock:s, finalPct:Math.round(s/CAP*100), played:played, collapsed:(played>0&&s<=0)};
+  }
+  function gaugeClass(p){ return p>=60?'hi':(p>=25?'mid':'lo'); }
+  function renderFishery(g){
+    var box=document.getElementById('fishSection');
+    if(!g||!g.groups.length){ box.innerHTML='<div class="empty">어장 데이터 없음</div>'; return; }
+    var html='';
+    g.groups.forEach(function(gr){
+      var d=fishDetail(g.rowsByGroup[gr]);
+      var sum = !d.played? '<span class="tag none">진행 전</span>'
+              : (d.collapsed? '<span class="tag bad">최종 '+d.finalPct+'% · 붕괴</span>' : '<span class="tag ok">최종 '+d.finalPct+'% · 유지</span>');
+      html+='<div class="gcard"><div class="ghead"><span class="gname">'+gr+'</span><span class="gsum">'+sum+'</span></div>';
+      d.rounds.forEach(function(r,i){
+        if(!r) return;
+        html+='<div class="rblock"><div class="rline"><span class="rname">'+(i+1)+'일차</span>'
+            +'<span class="rmeta">시작 '+r.startStock+' → 어획 '+r.caught+(r.over?'(요청 '+r.totalInput+')':'')+' → 남음 '+r.remaining+' → 번식 후 <b>'+r.nextStock+'마리 ('+r.pct+'%)</b></span></div>';
+        html+='<div class="gauge"><div class="'+gaugeClass(r.pct)+'" style="width:'+r.pct+'%"></div></div>';
+        html+='<div class="chips">'+r.list.map(function(x){ return '<span class="chip'+(x.val===0?' zero':'')+'">'+x.id+' <b>'+x.val+'</b></span>'; }).join('')+'</div></div>';
+      });
+      html+='</div>';
+    });
+    box.innerHTML=html;
+  }
+
+  /* ===== 요약 ===== */
+  function renderSummary(lh, fish){
+    var box=document.getElementById('summary'), cards='';
+    if(lh&&lh.groups.length){
+      var built=0, done=0;
+      lh.groups.forEach(function(gr){ var d=lhDetail(lh.rowsByGroup[gr], lh.capMap[gr]||0);
+        if(d.rounds.some(function(r){return r;})){ done++; if(d.buildRounds.length) built++; } });
+      cards+=stat('teal', built+' / '+done, '등대 건설 성공 모둠');
+      cards+=stat('bad', (done-built)+' / '+done, '끝내 미건설 모둠');
+    }
+    if(fish&&fish.groups.length){
+      var col=0, fdone=0;
+      fish.groups.forEach(function(gr){ var d=fishDetail(fish.rowsByGroup[gr]); if(d.played){ fdone++; if(d.collapsed) col++; } });
+      cards+=stat('bad', col+' / '+fdone, '어장 붕괴 모둠');
+      cards+=stat('good', (fdone-col)+' / '+fdone, '어장 유지 모둠');
+    }
+    box.innerHTML=cards||'<div class="empty">불러온 데이터가 없습니다.</div>';
+  }
+  function stat(cls,num,lab){ return '<div class="stat '+cls+'"><div class="num">'+num+'</div><div class="lab">'+lab+'</div></div>'; }
+</script>
+</body>
+</html>
