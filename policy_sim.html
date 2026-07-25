@@ -95,12 +95,18 @@
     for(var d=1; d<=DAYS; d++){ (function(d){
       var el=document.createElement('button');
       el.type='button'; el.className='day'; el.textContent=d+'일'; el.setAttribute('data-day',d);
-      el.addEventListener('click', function(){
-        closed[d]=!closed[d];   // 데이터만 바꾼다
-        update();               // 색·그래프·글자는 update가 데이터 기준으로 다시 그림
-      });
       box.appendChild(el);
     })(d); }
+    // 컨테이너 전체에서 탭/클릭 감지(버튼 위 투명 요소가 있어도 확실히 동작)
+    if(!box._bound){
+      box._bound=true;
+      var handler=function(ev){
+        var t=ev.target; while(t && t!==box && !t.getAttribute('data-day')){ t=t.parentNode; }
+        if(t && t.getAttribute){ var d=Number(t.getAttribute('data-day')); if(d){ ev.preventDefault(); closed[d]=!closed[d]; update(); } }
+      };
+      box.addEventListener('click', handler);
+      box.addEventListener('touchend', handler);
+    }
     syncDayButtons();
   }
   function syncDayButtons(){
