@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>등대말 · 작은 어촌 마을 이야기</title>
+<style>
+  :root{
+    --sky:#bfe3ef; --sky2:#e4f5f8; --sand:#f5e7c9; --sand-d:#ead2a3; --wood:#a9744f;
+    --sea:#2a8fa0; --sea-d:#1b6773; --coral:#e8825a; --red:#e35d4f; --ink:#4a3a2c; --cream:#fffaf0;
+    --gold:#f0b03c;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif; color:var(--ink);
+    background:linear-gradient(180deg,#a9d9e8 0%,#cfeef4 42%,#f3e6c7 42%,#efdcb4 100%);
+    min-height:100vh;}
+  .wrap{max-width:480px; margin:0 auto; min-height:100vh; padding:20px 18px 34px; display:flex; flex-direction:column;}
+  .screen{display:none; flex:1; flex-direction:column;}
+  .screen.on{display:flex;}
+  h1{font-size:30px; margin:0; text-align:center; color:var(--sea-d); letter-spacing:1px;}
+  h1 .em{color:var(--red);}
+  .tagline{text-align:center; color:#5f7f86; font-size:14px; margin:6px 0 0;}
+  .card{background:var(--cream); border:2px solid #fff; border-radius:22px; padding:20px;
+    box-shadow:0 10px 26px rgba(60,90,100,.18); margin-bottom:14px;}
+  .btn{width:100%; padding:16px; font-size:17px; font-weight:800; border:none; border-radius:16px;
+    background:var(--coral); color:#fff; cursor:pointer; box-shadow:0 5px 0 #c9663f; margin-top:6px;}
+  .btn:active{transform:translateY(3px); box-shadow:0 2px 0 #c9663f;}
+  .btn.sea{background:var(--sea); box-shadow:0 5px 0 var(--sea-d);} .btn.sea:active{box-shadow:0 2px 0 var(--sea-d);}
+  .btn.gold{background:var(--gold); box-shadow:0 5px 0 #c98d1e; color:#4a3208;} .btn.gold:active{box-shadow:0 2px 0 #c98d1e;}
+  .btn.ghost{background:#efe6d3; color:#7a6a52; box-shadow:0 5px 0 #d8caae;} .btn.ghost:active{box-shadow:0 2px 0 #d8caae;}
+  label{display:block; font-weight:800; font-size:13px; margin:12px 0 6px; color:#6b5a44;}
+  input,select{width:100%; padding:13px; font-size:16px; border:2px solid var(--sand-d); border-radius:13px; background:#fffdf8; color:var(--ink);}
+  input:focus,select:focus{outline:none; border-color:var(--coral);}
+  .avatars{display:flex; flex-wrap:wrap; gap:9px; margin-top:6px;}
+  .avatars button{font-size:29px; width:54px; height:54px; padding:0; background:#fff; border:2px solid var(--sand-d); border-radius:15px; cursor:pointer;}
+  .avatars button.sel{border-color:var(--coral); background:#fff1e9; transform:scale(1.06);}
+  .err{background:#fdeae5; border:1px solid #f2b8a6; color:#b0432a; padding:10px; border-radius:11px; font-size:13px; margin-top:10px; display:none;}
+  .center{text-align:center;}
+  /* 스플래시 장면 */
+  .scene{margin:10px auto 4px; display:block;}
+  .float{animation:bob 3.2s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  /* 마을 지도 */
+  .welcome{display:flex; align-items:center; gap:12px; margin-bottom:6px;}
+  .welcome .av{font-size:40px; background:#fff; border-radius:16px; width:60px; height:60px; display:flex; align-items:center; justify-content:center; border:2px solid var(--sand-d);}
+  .welcome .who b{font-size:18px;} .welcome .who span{font-size:13px; color:#7a6a52;}
+  .stage{display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; margin-bottom:10px; border:2px solid #fff; background:#fffaf0;}
+  .stage .ic{font-size:30px; width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:#eef6f2; border-radius:14px; flex-shrink:0;}
+  .stage .tx b{font-size:16px;} .stage .tx p{margin:2px 0 0; font-size:12.5px; color:#7a6a52;}
+  .stage.cur{border-color:var(--gold); background:#fff7e6; box-shadow:0 6px 16px rgba(240,176,60,.25);}
+  .stage.cur .ic{background:#ffe9bf; animation:glow 1.6s ease-in-out infinite;}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 rgba(240,176,60,0)}50%{box-shadow:0 0 0 7px rgba(240,176,60,.25)}}
+  .stage.lock{opacity:.55;}
+  .stage .pin{margin-left:auto; font-size:12px; font-weight:800; padding:4px 10px; border-radius:12px; background:#eee5d2; color:#8a7a60;}
+  .stage.cur .pin{background:var(--gold); color:#4a3208;}
+  /* 촌장 대화 */
+  .npc{display:flex; flex-direction:column; align-items:center; margin-top:10px;}
+  .npc .face{font-size:70px; line-height:1; filter:drop-shadow(0 6px 8px rgba(0,0,0,.15));}
+  .npc .name{margin-top:6px; font-weight:800; color:var(--sea-d); background:#fff; padding:3px 14px; border-radius:14px; border:2px solid var(--sand-d);}
+  .bubble{background:var(--cream); border:2px solid #fff; border-radius:20px; padding:20px; margin-top:14px; min-height:120px;
+    box-shadow:0 10px 24px rgba(60,90,100,.16); position:relative; font-size:16px; line-height:1.75;}
+  .bubble:before{content:""; position:absolute; top:-14px; left:50%; transform:translateX(-50%); border:8px solid transparent; border-bottom-color:#fff;}
+  .bubble .more{position:absolute; right:16px; bottom:12px; font-size:13px; color:#b09; color:var(--coral); font-weight:800; animation:blink 1s steps(2) infinite;}
+  @keyframes blink{50%{opacity:.2}}
+  .progress{display:flex; gap:5px; justify-content:center; margin-top:12px;}
+  .dot{width:8px; height:8px; border-radius:50%; background:#d8caae;}
+  .dot.on{background:var(--coral);}
+  /* 마을 지도(SVG) */
+  .mapwrap{margin-top:2px; border-radius:20px; overflow:hidden; box-shadow:0 10px 26px rgba(60,90,100,.18); border:3px solid #fff;}
+  .mapwrap svg{width:100%; height:auto; display:block;}
+  .node{cursor:pointer;}
+  .node.lock{cursor:default;}
+  .node.lock .tile,.node.lock .roof,.node.lock .ico,.node.lock .nlabel,.node.lock .nsub{opacity:.5;}
+  .glow{animation:ring 1.9s ease-in-out infinite;}
+  @keyframes ring{0%,100%{opacity:.55}50%{opacity:.12}}
+  .nlabel{font:800 15px -apple-system,"Malgun Gothic",sans-serif; fill:#4a3a2c;}
+  .nsub{font:600 11px -apple-system,"Malgun Gothic",sans-serif; fill:#7a6a52;}
+  .herepin{animation:bob 1.4s ease-in-out infinite;}
+  .lockmsg{background:#fff4e0; border:1px solid #f0dcb0; color:#8a6410; font-size:13px; font-weight:700; text-align:center; padding:11px; border-radius:13px; margin-top:12px; display:none;}
+  /* 등대 게임 */
+  .big-av-lg{font-size:52px; margin:4px 0;}
+  .pill2{display:inline-block; background:#fff2e4; color:var(--coral); padding:4px 14px; border-radius:16px; font-size:13px; font-weight:800; border:2px solid #ffe0cc;}
+  .count2{font-size:38px; font-weight:900; color:var(--sea-d); margin:8px 0;}
+  .avrow{font-size:28px; letter-spacing:5px; min-height:36px;}
+  .wnote{text-align:center; color:#7a6a52; font-size:14px; margin-top:8px;}
+  .rules2{font-size:13px; line-height:1.8; color:#5f5140;}
+  .rules2 b{color:var(--coral);}
+  .lhtimer{font-size:46px; font-weight:900; text-align:center; color:var(--sea-d); font-variant-numeric:tabular-nums; margin:2px 0 8px;}
+  .lhtimer.low{color:var(--red);}
+  .ctitle{font-weight:800; font-size:15px; margin:0 0 2px;}
+  .amt{display:flex; align-items:center; justify-content:center; gap:8px; margin:8px 0 4px;}
+  .amt input{width:150px; text-align:center; font-size:42px; font-weight:900; color:var(--coral); border:2px solid var(--sand-d); border-radius:14px; padding:10px; background:#fffdf8;}
+  .amt input::-webkit-outer-spin-button,.amt input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;} .amt input{-moz-appearance:textfield;}
+  .amt span{font-size:20px; color:#7a6a52;}
+  .stepper2{display:flex; gap:8px; margin-top:8px;}
+  .stepper2 button{flex:1; padding:12px; border:none; border-radius:12px; background:#efe6d3; color:#6b5a44; font-weight:800; font-size:17px; cursor:pointer;}
+  .verdict2{text-align:center; font-size:21px; font-weight:900; padding:14px; border-radius:16px; margin:8px 0 12px;}
+  .verdict2.ok{background:#e3f5ea; color:#1f7a44;} .verdict2.bad{background:#fdeae5; color:#c0492f;}
+  .rrow{display:flex; justify-content:space-between; padding:11px 2px; border-bottom:1px solid #f0e9d8; font-size:15px;} .rrow b{font-size:16px;}
+  .trend2{font-size:14px; line-height:1.9;}
+  .trend2 .rrow{border-color:#f0e9d8;}
+  /* 지도 물고기 헤엄침 */
+  .swim{animation-name:swim; animation-timing-function:linear; animation-iteration-count:infinite;}
+  @keyframes swim{ from{transform:translateX(-30px)} to{transform:translateX(380px)} }
+  /* 등대 점등 */
+  #mapLighthouse.lit #lhBeam{animation:beam 1.8s ease-in-out infinite;}
+  @keyframes beam{0%,100%{opacity:0}50%{opacity:.85}}
+  /* 뱃지 */
+  .badges{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge-chip{display:flex; align-items:center; gap:6px; background:#fff4e0; border:2px solid #f0d9a8; border-radius:14px; padding:4px 11px 4px 8px; font-size:12.5px; font-weight:800; color:#8a6410;}
+  .badge-chip .bi{font-size:18px;}
+  .badge-title{font-size:12px; font-weight:800; color:#7a6a52; margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ① 스플래시 -->
+  <div class="screen on" id="splash">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+      <svg class="scene float" width="220" height="150" viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="110" cy="140" rx="105" ry="12" fill="#e8d3a8"/>
+        <path d="M70 140 L80 60 L140 60 L150 140 Z" fill="#f2f0ea"/>
+        <path d="M80 60 L140 60 L134 78 L86 78 Z" fill="#e35d4f"/>
+        <path d="M86 96 L134 96 L130 112 L90 112 Z" fill="#e35d4f"/>
+        <rect x="92" y="34" width="36" height="26" rx="4" fill="#cfe9ef"/>
+        <rect x="88" y="30" width="44" height="8" rx="4" fill="#3b2e26"/>
+        <polygon points="110,10 122,30 98,30" fill="#f0b03c"/>
+        <circle cx="110" cy="47" r="8" fill="#fff3c9"/>
+        <g opacity=".5"><path d="M118 47 L150 34 M118 47 L150 60" stroke="#f0b03c" stroke-width="3" stroke-linecap="round"/></g>
+        <path d="M20 140 q20 -10 40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7fc6d4" stroke-width="3"/>
+      </svg>
+      <h1>등대<span class="em">말</span></h1>
+      <p class="tagline">작은 어촌 마을의 이야기</p>
+      <div style="height:22px;"></div>
+      <div class="card center" style="padding:16px 20px;">
+        <p style="margin:0 0 4px; font-size:14px; color:#6b5a44;">바다 곁 작은 마을, <b>등대말</b>에 오신 걸 환영합니다.<br>당신은 이 마을의 새 <b>어부</b>가 됩니다.</p>
+      </div>
+      <button class="btn" onclick="go('register')">🎣 어부 등록소로 →</button>
+    </div>
+  </div>
+
+  <!-- ② 어부 등록소 -->
+  <div class="screen" id="register">
+    <h1 style="font-size:24px;">🎣 어부 등록소</h1>
+    <p class="tagline">마을 명부에 이름을 올려요</p>
+    <div class="card">
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;"><label>반</label><select id="rSession"><option>1반</option><option>2반</option><option>3반</option><option>4반</option><option>5반</option><option>6반</option><option>7반</option><option>8반</option><option>9반</option><option>10반</option></select></div>
+        <div style="flex:1;"><label>모둠</label><select id="rGroup"></select></div>
+      </div>
+      <label>학번</label><input type="text" id="rId" inputmode="numeric" placeholder="예: 10312">
+      <label>이름 (실제 이름)</label><input type="text" id="rName" placeholder="예: 김바다">
+      <label>닉네임 (마을에서 불릴 이름)</label><input type="text" id="rNick" placeholder="예: 파도잡이">
+      <label>아바타 고르기</label><div class="avatars" id="avatarGrid"></div>
+      <button class="btn sea" onclick="doRegister()">✅ 어부 등록 완료</button>
+      <div class="err" id="regErr"></div>
+    </div>
+  </div>
+
+  <!-- ③ 마을 지도 (SVG 풍경) -->
+  <div class="screen" id="map">
+    <h1 style="font-size:24px;">🗺️ 등대말</h1>
+    <p class="tagline">마을 길을 따라 여정을 떠나요</p>
+    <div class="card" style="padding:12px 16px;">
+      <div class="welcome">
+        <div class="av" id="mAv">🐟</div>
+        <div class="who"><b id="mNick">어부님</b><br><span id="mSub"></span></div>
+      </div>
+      <div id="badgeRow" style="margin-top:10px; display:none;"></div>
+    </div>
+
+    <div class="mapwrap">
+      <svg viewBox="0 0 360 980" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#cfeef4"/><stop offset="0.42" stop-color="#dff0d6"/>
+            <stop offset="0.78" stop-color="#f3e6c7"/><stop offset="1" stop-color="#bfe3ef"/>
+          </linearGradient>
+        </defs>
+        <rect width="360" height="980" fill="url(#bg)"/>
+        <!-- 구름 -->
+        <g fill="#ffffff" opacity=".85"><ellipse cx="70" cy="60" rx="34" ry="16"/><ellipse cx="95" cy="52" rx="24" ry="14"/></g>
+        <!-- 바다(하단) -->
+        <path d="M0 930 q30 -12 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 V980 H0 Z" fill="#a9d9e8"/>
+        <path d="M0 950 q30 -10 60 0 t60 0 t60 0 t60 0 t60 0 t60 0" fill="none" stroke="#88c8da" stroke-width="3"/>
+        <!-- 나무/바위 장식 -->
+        <g><circle cx="40" cy="640" r="15" fill="#8fc47e"/><rect x="37" y="650" width="6" height="12" fill="#a9744f"/></g>
+        <g><circle cx="325" cy="470" r="14" fill="#8fc47e"/><rect x="322" y="480" width="6" height="12" fill="#a9744f"/></g>
+        <g><circle cx="300" cy="820" r="13" fill="#8fc47e"/><rect x="297" y="829" width="6" height="11" fill="#a9744f"/></g>
+        <ellipse cx="55" cy="300" rx="16" ry="9" fill="#c9bfa8"/>
+        <!-- 길 -->
+        <path id="road" d="M100 890 Q30 800 255 715 Q340 625 95 540 Q0 455 265 370 Q340 285 140 195 Q90 150 275 90"
+              fill="none" stroke="#ecdcb6" stroke-width="16" stroke-linecap="round"/>
+        <path d="M100 890 Q30 800 255 715" fill="none" stroke="#d3a86a" stroke-width="12" stroke-linecap="round"/>
+
+        <!-- 꼭대기 등대 -->
+        <g transform="translate(275,90)">
+          <path d="M-11 20 L-7 -20 L7 -20 L11 20 Z" fill="#f2f0ea"/>
+          <path d="M-7 -20 L7 -20 L5 -8 L-5 -8 Z" fill="#e35d4f"/><path d="M-9 8 L9 8 L7 20 L-7 20 Z" fill="#e35d4f"/>
+          <rect x="-8" y="-30" width="16" height="10" rx="2" fill="#3b2e26"/>
+          <circle cx="0" cy="-25" r="4" fill="#fff3c9"/>
+        </g>
+
+        <!-- 4. 정책 제안소 (잠김) -->
+        <g class="node lock" onclick="lockedMsg()">
+          <polygon class="roof" points="102,169 140,143 178,169" fill="#d9a441"/>
+          <rect class="tile" x="106" y="169" width="68" height="52" rx="13" fill="#fffaf0" stroke="#fff" stroke-width="2"/>
+          <text class="ico" x="140" y="204" font-size="30" text-anchor="middle">📜</text>
+          <circle cx="170" cy="171" r="11" fill="#c9bfa8"/><text x="170" y="175" font-size="11" text-anchor="middle">🔒</text>
+          <text class="nlabel" x="140" y="240" text-anchor="middle">정책 제안소</text>
+          <text class="nsub" x="140" y="256" text-anchor="middle">나만의 정책 발안</text>
+        </g>
+
+        <!-- 3. 실험실 (잠김) -->
+        <g class="node lock" onclick="lockedMsg()">
+          <polygon class="roof" points="227,344 265,318 303,344" fill="#7b6cc9"/>
+          <rect class="tile" x="231" y="344" width="68" height="52" rx="13" fill="#fffaf0" stroke="#fff" stroke-width="2"/>
+          <text class="ico" x="265" y="379" font-size="30" text-anchor="middle">🔬</text>
+          <circle cx="295" cy="346" r="11" fill="#c9bfa8"/><text x="295" y="350" font-size="11" text-anchor="middle">🔒</text>
+          <text class="nlabel" x="265" y="415" text-anchor="middle">실험실</text>
+          <text class="nsub" x="265" y="431" text-anchor="middle">어장 살릴 규칙 실험</text>
+        </g>
+
+        <!-- 2. 수협 (등대 완료 시 열림) -->
+        <g class="node lock" id="suhNode" onclick="suhClick()">
+          <circle id="suhGlow" class="glow" cx="95" cy="545" r="46" fill="#f0b03c" style="display:none;"/>
+          <text id="suhPin" class="herepin" x="95" y="486" font-size="13" font-weight="800" fill="#c9821e" text-anchor="middle" style="display:none;">여기! ▼</text>
+          <polygon class="roof" points="57,514 95,488 133,514" fill="#2a8fa0"/>
+          <rect class="tile" x="61" y="514" width="68" height="52" rx="13" fill="#fffaf0" stroke="#fff" stroke-width="2"/>
+          <text class="ico" x="95" y="549" font-size="30" text-anchor="middle">⚓</text>
+          <g id="suhLock"><circle cx="125" cy="516" r="11" fill="#c9bfa8"/><text x="125" y="520" font-size="11" text-anchor="middle">🔒</text></g>
+          <g id="suhChk" style="display:none;"><circle cx="125" cy="516" r="11" fill="#3ea864"/><text x="125" y="521" font-size="13" fill="#fff" text-anchor="middle" font-weight="800">✓</text></g>
+          <text class="nlabel" x="95" y="585" text-anchor="middle">수협</text>
+          <text class="nsub" x="95" y="601" text-anchor="middle">어장 어획량 조절</text>
+        </g>
+
+        <!-- 1. 회의소 (현재!) -->
+        <g class="node" onclick="openLighthouseChief()">
+          <circle id="lhGlow" class="glow" cx="255" cy="720" r="46" fill="#f0b03c"/>
+          <text id="lhPin" class="herepin" x="255" y="662" font-size="13" font-weight="800" fill="#c9821e" text-anchor="middle">여기! ▼</text>
+          <polygon class="roof" points="217,689 255,661 293,689" fill="#e35d4f"/>
+          <rect class="tile" x="221" y="689" width="68" height="54" rx="13" fill="#fffaf0" stroke="#fff" stroke-width="2"/>
+          <text class="ico" x="255" y="725" font-size="30" text-anchor="middle">🏛️</text>
+          <g id="lhChk" style="display:none;"><circle cx="285" cy="691" r="11" fill="#3ea864"/><text x="285" y="696" font-size="13" fill="#fff" text-anchor="middle" font-weight="800">✓</text></g>
+          <text class="nlabel" x="255" y="762" text-anchor="middle">회의소</text>
+          <text class="nsub" x="255" y="778" text-anchor="middle">등대 세우기</text>
+        </g>
+        <!-- 지도 등대(건설 성공 시 점등) -->
+        <g id="mapLighthouse" style="display:none;">
+          <circle id="lhBeam" cx="315" cy="690" r="26" fill="#fff3c9" opacity="0"/>
+          <g transform="translate(315,714) scale(0.8)">
+            <path d="M-9 16 L-6 -16 L6 -16 L9 16 Z" fill="#f2f0ea"/>
+            <path d="M-6 -16 L6 -16 L4.5 -6 L-4.5 -6 Z" fill="#e35d4f"/><path d="M-8 4 L8 4 L6.5 16 L-6.5 16 Z" fill="#e35d4f"/>
+            <rect x="-7" y="-24" width="14" height="9" rx="2" fill="#3b2e26"/>
+            <circle id="lhLamp" cx="0" cy="-19" r="3.6" fill="#7a7a7a"/>
+          </g>
+        </g>
+        <!-- 어부 캐릭터 -->
+        <text id="mapFisher" x="200" y="732" font-size="30" text-anchor="middle">🐟</text>
+
+        <!-- 0. 어부 등록소 (완료) -->
+        <g class="node" onclick="go('register')">
+          <polygon class="roof" points="62,864 100,838 138,864" fill="#e8a05a"/>
+          <rect class="tile" x="66" y="864" width="68" height="52" rx="13" fill="#fffaf0" stroke="#fff" stroke-width="2"/>
+          <text class="ico" x="100" y="899" font-size="30" text-anchor="middle">🏠</text>
+          <circle cx="130" cy="866" r="11" fill="#3ea864"/><text x="130" y="871" font-size="13" fill="#fff" text-anchor="middle" font-weight="800">✓</text>
+          <text class="nlabel" x="100" y="935" text-anchor="middle">어부 등록소</text>
+        </g>
+        <!-- 바다 물고기(어장 유지 시 헤엄침) -->
+        <g id="mapFish" style="display:none;">
+          <text class="swim" style="animation-duration:7s" x="10" y="948" font-size="17">🐟</text>
+          <text class="swim" style="animation-duration:9s;animation-delay:-2s" x="10" y="963" font-size="15">🐠</text>
+          <text class="swim" style="animation-duration:6s;animation-delay:-4s" x="10" y="936" font-size="14">🐟</text>
+          <text class="swim" style="animation-duration:10s;animation-delay:-1s" x="10" y="957" font-size="18">🐠</text>
+          <text class="swim" style="animation-duration:8s;animation-delay:-5s" x="10" y="944" font-size="15">🐡</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="lockmsg" id="lockMsg">🔒 아직 잠긴 건물이에요. 앞 스테이지를 먼저 완료하세요!</div>
+    <button class="btn gold" style="margin-top:12px;" onclick="openLighthouseChief()">🛟 회의소로 출발하기 →</button>
+  </div>
+
+  <!-- ④ 촌장 등대 미션 -->
+  <div class="screen" id="chief">
+    <div class="npc">
+      <div class="face" id="npcFace">🧓</div>
+      <div class="name" id="npcName">등대말 촌장</div>
+    </div>
+    <div class="bubble" onclick="nextLine()">
+      <span id="dlgText"></span>
+      <span class="more" id="dlgMore">▼ 탭</span>
+    </div>
+    <div class="progress" id="dlgDots"></div>
+    <div style="flex:1;"></div>
+    <button class="btn" id="dlgNext" onclick="nextLine()">다음 ▶</button>
+    <button class="btn sea" id="dlgStart" style="display:none;" onclick="dlgStart()">시작하기</button>
+  </div>
+
+  <!-- ===== 등대 게임 ===== -->
+  <div class="screen" id="lhSetup">
+    <h1 style="font-size:22px;">🛟 등대 게임 연결</h1>
+    <p class="tagline">선생님용: 등대 서버 주소를 한 번만 넣어주세요</p>
+    <div class="card">
+      <label>등대 웹 앱 URL (.../exec)</label>
+      <input type="text" id="lhUrlIn" placeholder="https://script.google.com/.../exec">
+      <button class="btn sea" onclick="lhSaveUrl()">연결하고 시작</button>
+      <div class="err" id="lhSetErr"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="lhWait">
+    <div class="card center">
+      <div class="big-av-lg" id="lhWaitAv">🐟</div>
+      <div class="pill2" id="lhWaitLabel"></div>
+      <div class="count2"><span id="lhCount">0</span> / <span id="lhCap">0</span> 명</div>
+      <div class="avrow" id="lhAvatars"></div>
+      <div class="wnote" id="lhWaitNote">마을 사람들이 모이는 중…</div>
+    </div>
+    <div class="card"><div class="rules2" id="lhRules"></div></div>
+  </div>
+
+  <div class="screen" id="lhInput">
+    <div class="center"><span class="pill2" id="lhInRound"></span></div>
+    <div class="lhtimer" id="lhTimer">30</div>
+    <div class="card">
+      <p class="ctitle center">등대에 얼마를 기부할까요? <b style="color:var(--coral)">(10냥 단위)</b></p>
+      <p class="center" style="font-size:13px;color:#7a6a52;margin:2px 0 6px;">내 소지금 100냥</p>
+      <div class="amt"><input type="number" id="lhAmt" inputmode="numeric" min="0" max="100" step="10" placeholder="0" oninput="lhOnAmount()"><span>냥</span></div>
+      <div class="stepper2"><button onclick="lhStep(-10)">− 10</button><button onclick="lhStep(10)">＋ 10</button></div>
+      <div class="err" id="lhInErr"></div>
+      <button class="btn" onclick="lhSubmit()">기부 확정</button>
+      <p class="center" id="lhMini" style="font-size:12px;color:#9a8a70;margin-top:10px;"></p>
+    </div>
+  </div>
+
+  <div class="screen" id="lhSubmitted">
+    <div class="card center">
+      <div style="font-size:48px;">🤫</div>
+      <div class="pill2" id="lhSubRound"></div>
+      <h1 style="font-size:22px;margin:10px 0;">기부 확정!</h1>
+      <div class="lhtimer" id="lhSubTimer" style="font-size:30px;">30</div>
+      <div class="wnote">모두의 마감을 기다리는 중… (개인 기부액은 비밀)</div>
+    </div>
+  </div>
+
+  <div class="screen" id="lhReveal">
+    <div class="center"><span class="pill2" id="lhRevRound"></span></div>
+    <div class="verdict2" id="lhVerdict"></div>
+    <div class="card">
+      <div class="rrow"><span>우리 모둠 총 모금액</span><b id="lhTotal">0냥</b></div>
+      <div class="rrow"><span>등대 건설 목표액</span><b id="lhTarget">0냥</b></div>
+      <div class="rrow"><span>나의 최종 자금</span><b id="lhFinalMoney">0냥</b></div>
+    </div>
+    <div class="wnote" id="lhRevNote">촌장이 다음 라운드를 준비하는 중…</div>
+  </div>
+
+  <div class="screen" id="lhDone">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;" class="center">
+      <div style="font-size:66px;">🗼</div>
+      <h1 style="font-size:23px;margin-top:6px;">등대 미션 완료!</h1>
+      <div class="card"><div class="trend2" id="lhTrend"></div></div>
+      <button class="btn gold" onclick="finishLighthouse()">🗺️ 마을 지도로 돌아가기</button>
+    </div>
+  </div>
+
+  <!-- ===== 어장 게임 ===== -->
+  <div class="screen" id="fishSetup">
+    <h1 style="font-size:22px;">🎣 어장 게임 연결</h1>
+    <p class="tagline">선생님용: 어장 서버 주소를 한 번만 넣어주세요</p>
+    <div class="card">
+      <label>어장 웹 앱 URL (.../exec)</label>
+      <input type="text" id="fishUrlIn" placeholder="https://script.google.com/.../exec">
+      <button class="btn sea" onclick="fhSaveUrl()">연결하고 시작</button>
+      <div class="err" id="fishSetErr"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="fishWait">
+    <div class="card center">
+      <div class="big-av-lg" id="fhWaitAv">🐟</div>
+      <div class="pill2" id="fhWaitLabel"></div>
+      <div class="count2"><span id="fhCount">0</span> / <span id="fhCap">0</span> 명</div>
+      <div class="avrow" id="fhAvatars"></div>
+      <div class="wnote" id="fhWaitNote">마을 사람들이 모이는 중…</div>
+    </div>
+    <div class="card"><div class="rules2" id="fhRules"></div></div>
+  </div>
+
+  <div class="screen" id="fishInput">
+    <div class="center"><span class="pill2" id="fhInRound"></span></div>
+    <div class="lhtimer" id="fhTimer">30</div>
+    <div class="card">
+      <p class="center" style="font-size:15px;margin:0 0 4px;">지금 어장에 <b id="fhStock" style="font-size:26px;color:var(--sea);">0</b> 마리</p>
+      <div style="height:12px;background:#eef3f4;border-radius:8px;overflow:hidden;max-width:260px;margin:0 auto;"><div id="fhBar" style="height:100%;width:0%;background:linear-gradient(90deg,#39c2c9,#7ff0bd);"></div></div>
+      <p class="ctitle center" style="margin-top:12px;">몇 마리를 잡을까요? <b style="color:var(--sea)">(0~10마리)</b></p>
+      <div class="amt"><input type="number" id="fhAmt" inputmode="numeric" min="0" max="10" step="1" placeholder="0" oninput="fhOnAmount()"><span>마리</span></div>
+      <div class="stepper2"><button onclick="fhStep(-1)">− 1</button><button onclick="fhStep(1)">＋ 1</button></div>
+      <div class="err" id="fhInErr"></div>
+      <button class="btn sea" onclick="fhSubmit()">조업 확정</button>
+      <p class="center" id="fhMini" style="font-size:12px;color:#9a8a70;margin-top:10px;"></p>
+    </div>
+  </div>
+
+  <div class="screen" id="fishCollapsed">
+    <div class="card center">
+      <div style="font-size:48px;">🪸</div>
+      <div class="pill2" id="fhColRound"></div>
+      <h1 style="font-size:22px;margin:8px 0;">어장이 텅 비었어요</h1>
+      <div class="lhtimer" id="fhColTimer" style="font-size:30px;">30</div>
+      <div class="wnote">잡을 물고기가 없습니다. 이번 일차는 조업 0마리로 넘어가요.</div>
+    </div>
+  </div>
+
+  <div class="screen" id="fishSubmitted">
+    <div class="card center">
+      <div style="font-size:48px;">🤫</div>
+      <div class="pill2" id="fhSubRound"></div>
+      <h1 style="font-size:22px;margin:10px 0;">조업 확정!</h1>
+      <div class="lhtimer" id="fhSubTimer" style="font-size:30px;">30</div>
+      <div class="wnote">모두의 마감을 기다리는 중… (개인 어획량은 비밀)</div>
+    </div>
+  </div>
+
+  <div class="screen" id="fishReveal">
+    <div class="center"><span class="pill2" id="fhRevRound"></span></div>
+    <div class="verdict2" id="fhVerdict"></div>
+    <div class="card">
+      <div class="rrow"><span>일차 시작 어장</span><b id="fhRStart">0마리</b></div>
+      <div class="rrow"><span>우리 모둠 총 어획</span><b id="fhRCaught">0마리</b></div>
+      <div class="rrow"><span>남은 어장</span><b id="fhRRemain">0마리</b></div>
+      <div class="rrow"><span>번식 후 다음 어장</span><b id="fhRNext">0마리</b></div>
+      <div class="rrow"><span>나의 이번 / 누적 어획</span><b id="fhRMine">0 / 0마리</b></div>
+    </div>
+    <div class="wnote" id="fhRevNote">촌장이 다음 일차를 준비하는 중…</div>
+  </div>
+
+  <div class="screen" id="fishDone">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;" class="center">
+      <div style="font-size:66px;" id="fhDoneIcon">🐟</div>
+      <h1 style="font-size:23px;margin-top:6px;">어장 미션 완료!</h1>
+      <div class="card"><div class="trend2" id="fhTrend"></div></div>
+      <button class="btn gold" onclick="finishFishery()">🗺️ 마을 지도로 돌아가기</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var AVATARS=['🐟','🦀','🐙','🐬','🦑','🦈','🐠','🦞','🐡','🐳'];
+  var GROUPS=['1모둠','2모둠','3모둠','4모둠','5모둠','6모둠'];
+  var fisher=null, selectedAvatar='';
+
+  function $(id){return document.getElementById(id);}
+  var ALL_SCREENS=['splash','register','map','chief','lhSetup','lhWait','lhInput','lhSubmitted','lhReveal','lhDone','fishSetup','fishWait','fishInput','fishCollapsed','fishSubmitted','fishReveal','fishDone'];
+  function showOnly(id){ ALL_SCREENS.forEach(function(s){ var el=$(s); if(el) el.classList.toggle('on', s===id); }); window.scrollTo(0,0); }
+  function go(id){ showOnly(id); if(id==='map'){ paintMap(); } }
+
+  /* 등록 */
+  (function initReg(){
+    var grid=$('avatarGrid');
+    AVATARS.forEach(function(a){ var b=document.createElement('button'); b.textContent=a; b.type='button';
+      b.onclick=function(){ selectedAvatar=a; document.querySelectorAll('#avatarGrid button').forEach(function(x){x.classList.remove('sel');}); b.classList.add('sel'); };
+      grid.appendChild(b); });
+    var g=$('rGroup'); GROUPS.forEach(function(x){ var o=document.createElement('option'); o.textContent=x; g.appendChild(o); });
+    try{ var saved=JSON.parse(localStorage.getItem('ddm_fisher')||'null'); if(saved){ fisher=saved; } }catch(e){}
+  })();
+
+  function doRegister(){
+    var f={ session:$('rSession').value, group:$('rGroup').value,
+      studentId:$('rId').value.trim(), name:$('rName').value.trim(), nickname:$('rNick').value.trim(), avatar:selectedAvatar };
+    if(!f.studentId){ regErr('학번을 입력해 주세요.'); return; }
+    if(!f.name){ regErr('이름을 입력해 주세요.'); return; }
+    if(!f.nickname){ regErr('닉네임을 입력해 주세요.'); return; }
+    if(!f.avatar){ regErr('아바타를 골라 주세요.'); return; }
+    fisher=f; try{ localStorage.setItem('ddm_fisher', JSON.stringify(f)); }catch(e){}
+    go('map');
+  }
+  function regErr(m){ var el=$('regErr'); el.style.display='block'; el.textContent=m; }
+
+  function progress(){ try{ return JSON.parse(localStorage.getItem('ddm_progress')||'{}'); }catch(e){ return {}; } }
+  function saveProgress(patch){ var p=progress(); for(var k in patch) p[k]=patch[k]; try{ localStorage.setItem('ddm_progress',JSON.stringify(p)); }catch(e){} }
+  var BADGES={ lighthouse:{icon:'🗼',name:'등대지기'}, coop:{icon:'🤝',name:'협력의 달인'}, fishery:{icon:'🎣',name:'지속가능 어부'} };
+  function getBadges(){ try{ return JSON.parse(localStorage.getItem('ddm_badges')||'[]'); }catch(e){ return []; } }
+  function addBadge(id){ var b=getBadges(); if(b.indexOf(id)<0){ b.push(id); try{ localStorage.setItem('ddm_badges',JSON.stringify(b)); }catch(e){} } }
+
+  var REST={ '회의소':{x:205,y:730}, '수협':{x:140,y:556}, '실험실':{x:215,y:387} };
+  var NODEPT={ '등록소':{x:100,y:890}, '회의소':{x:255,y:715}, '수협':{x:95,y:540}, '실험실':{x:265,y:370} };
+  var pendingWalk=null;
+
+  /* 지도 */
+  function paintMap(){
+    if(!fisher) return;
+    $('mAv').textContent=fisher.avatar;
+    $('mNick').textContent=fisher.nickname+' 어부님';
+    $('mSub').textContent=fisher.session+' '+fisher.group+' · '+fisher.name;
+    var mf=$('mapFisher'); if(mf) mf.textContent=fisher.avatar;
+    var lm=$('lockMsg'); if(lm) lm.style.display='none';
+    var p=progress();
+
+    if(p.lighthouse==='done'){
+      if($('lhGlow')) $('lhGlow').style.display='none';
+      if($('lhPin')) $('lhPin').style.display='none';
+      if($('lhChk')) $('lhChk').style.display='';
+      var sn=$('suhNode'); if(sn) sn.classList.remove('lock');
+      if($('suhLock')) $('suhLock').style.display='none';
+      if(p.fishery!=='done'){ if($('suhGlow')) $('suhGlow').style.display=''; if($('suhPin')) $('suhPin').style.display=''; }
+      var ml=$('mapLighthouse'); if(ml){ ml.style.display='';
+        if(p.lhBuilt){ ml.classList.add('lit'); if($('lhLamp')) $('lhLamp').setAttribute('fill','#fff3c9'); }
+        else { ml.classList.remove('lit'); if($('lhLamp')) $('lhLamp').setAttribute('fill','#7a7a7a'); } }
+      if(p.fishery!=='done' && lm){ lm.style.display='block';
+        lm.textContent = p.lhBuilt ? '🗼 등대에 불이 켜졌어요! 이제 수협으로 가보세요.' : '🌊 등대는 못 세웠지만… 이제 수협으로 가보세요.'; }
+    }
+    if(p.fishery==='done'){
+      if($('suhGlow')) $('suhGlow').style.display='none';
+      if($('suhPin')) $('suhPin').style.display='none';
+      if($('suhChk')) $('suhChk').style.display='';
+      var fishG=$('mapFish'); if(fishG) fishG.style.display = p.fishSurvived ? '' : 'none';
+      if(lm){ lm.style.display='block'; lm.textContent = p.fishSurvived ? '🎣 어장을 지켜냈어요! 바다에 물고기가 가득해요.' : '🪸 어장이 붕괴했어요… 다음엔 규칙이 필요해요.'; }
+    }
+
+    // 뱃지
+    var badges=getBadges(), br=$('badgeRow');
+    if(br){ if(badges.length){ br.style.display=''; br.innerHTML='<div class="badge-title">🏅 획득한 뱃지</div><div class="badges">'
+        +badges.map(function(id){ var b=BADGES[id]; return b?'<span class="badge-chip"><span class="bi">'+b.icon+'</span>'+b.name+'</span>':''; }).join('')+'</div>'; }
+      else { br.style.display='none'; } }
+
+    // 어부 위치/걷기
+    var restNode = (p.fishery==='done') ? '실험실' : (p.lighthouse==='done' ? '수협' : '회의소');
+    if(pendingWalk && mf){
+      var fromN = pendingWalk==='lh' ? '회의소' : '수협';
+      var toN = pendingWalk==='lh' ? '수협' : '실험실';
+      pendingWalk=null;
+      walkFisher(fromN, toN, function(){ placeFisher(restNode); });
+    } else { placeFisher(restNode); }
+  }
+  function placeFisher(node){ var mf=$('mapFisher'), r=REST[node]; if(mf&&r){ mf.setAttribute('x',r.x); mf.setAttribute('y',r.y); } }
+  function walkFisher(fromNode,toNode,cb){
+    var road=$('road'), mf=$('mapFisher'); if(!road||!mf||!road.getPointAtLength){ if(cb)cb(); return; }
+    var total=road.getTotalLength();
+    function lenAt(pt){ var best=0,bd=1e9; for(var l=0;l<=total;l+=6){ var q=road.getPointAtLength(l); var d=(q.x-pt.x)*(q.x-pt.x)+(q.y-pt.y)*(q.y-pt.y); if(d<bd){bd=d;best=l;} } return best; }
+    var a=lenAt(NODEPT[fromNode]), b=lenAt(NODEPT[toNode]), dur=1600, t0=null;
+    function step(ts){ if(!t0)t0=ts; var k=Math.min(1,(ts-t0)/dur); var pt=road.getPointAtLength(a+(b-a)*k);
+      var hop=Math.abs(Math.sin(k*Math.PI*5))*7; mf.setAttribute('x', pt.x-8); mf.setAttribute('y', pt.y+4-hop);
+      if(k<1) requestAnimationFrame(step); else if(cb) cb(); }
+    requestAnimationFrame(step);
+  }
+
+  function suhClick(){ if(progress().lighthouse==='done'){ openFisheryChief(); } else { lockedMsg(); } }
+  function stageClick(id){ go(id); }
+  function lockedMsg(){ var lm=$('lockMsg'); if(!lm) return; lm.style.display='block';
+    lm.textContent='🔒 아직 잠긴 건물이에요. 앞 스테이지를 먼저 완료하세요!';
+    clearTimeout(window._lmT); window._lmT=setTimeout(function(){ lm.style.display='none'; }, 2600); }
+
+  /* ===== 촌장 대화 (공용) ===== */
+  var DLG={lines:[], startFn:null};
+  var li=0, typing=false, typeTimer=null;
+  function openChief(cfg){ DLG=cfg; $('npcFace').textContent=cfg.face||'🧓'; $('npcName').textContent=cfg.name||'등대말 촌장';
+    $('dlgStart').textContent=cfg.startLabel||'시작하기'; showOnly('chief'); startDialogue(); }
+  function startDialogue(){ li=0; buildDots(); showLine(); $('dlgStart').style.display='none'; $('dlgNext').style.display=''; }
+  function buildDots(){ var d=$('dlgDots'); d.innerHTML=''; DLG.lines.forEach(function(_,i){ var s=document.createElement('div'); s.className='dot'+(i===0?' on':''); d.appendChild(s); }); }
+  function markDots(){ document.querySelectorAll('#dlgDots .dot').forEach(function(s,i){ s.classList.toggle('on', i<=li); }); }
+  function showLine(){
+    var txt=DLG.lines[li], el=$('dlgText'); el.textContent=''; typing=true; $('dlgMore').style.display='none';
+    var i=0; clearInterval(typeTimer);
+    typeTimer=setInterval(function(){ el.textContent=txt.slice(0,++i); if(i>=txt.length){ clearInterval(typeTimer); typing=false; endOfLineUI(); } }, 28);
+    markDots();
+  }
+  function endOfLineUI(){
+    if(li>=DLG.lines.length-1){ $('dlgMore').style.display='none'; $('dlgNext').style.display='none'; $('dlgStart').style.display=''; }
+    else{ $('dlgMore').style.display=''; }
+  }
+  function nextLine(){
+    if(typing){ clearInterval(typeTimer); $('dlgText').textContent=DLG.lines[li]; typing=false; endOfLineUI(); return; }
+    if(li<DLG.lines.length-1){ li++; showLine(); }
+  }
+  function dlgStart(){ if(DLG.startFn) DLG.startFn(); }
+
+  function openLighthouseChief(){ openChief({ face:'🧓', name:'등대말 촌장', startLabel:'🛟 등대 미션 시작하기', startFn:startLighthouse, lines:[
+    "허허, 새 어부가 왔구먼! 나는 이 등대말의 촌장일세.",
+    "우리 마을은 밤바다가 몹시 어둡다네. 배들이 자주 바위에 부딪혀 큰일이야…",
+    "등대를 세우면 온 마을이 안전해져. 한 사람만 덕 보는 게 아니라, 모두가 함께 말일세.",
+    "헌데 등대엔 돈이 든다네. 누가 얼마를 낼지는… 각자의 마음에 달렸지.",
+    "그런데 말이야. '나 하나쯤이야' 하고 다들 미루면… 등대는 영영 못 세운다네.",
+    "자, 마을 사람들과 힘을 모아 등대를 세울 수 있겠나? 자네만 믿겠네!"
+  ]}); }
+  function openFisheryChief(){ openChief({ face:'🧓', name:'등대말 촌장', startLabel:'🎣 어장으로 나가기', startFn:startFishery, lines:[
+    "등대 덕에 밤바다가 안전해졌네. 정말 고맙네, 자네!",
+    "헌데 이번엔 다른 큰일이라네. 앞바다 어장에 경고등이 켜졌어…",
+    "물고기가 눈에 띄게 줄고 있다는 게야. 다들 너무 많이 잡은 탓이지.",
+    "어장도 마을 모두의 것. 헌데 물고기가 남아 있어야 새끼가 늘어난다네.",
+    "'나 하나쯤 더 잡아도' 하며 다들 욕심내면… 어장은 텅 비어 버리지.",
+    "닷새 동안 조업을 해보게. 많이 잡되, 어장을 지킬 수 있겠나?"
+  ]}); }
+  /* ===================== 등대 게임 ===================== */
+  var DEFAULT_LH_URL = "";   // 선생님: 여기에 등대 .../exec 주소를 넣으면 URL 입력이 생략됩니다
+  var LH_URL="";
+  var INIT=100, BENEFIT=120, PER_CAP=50, COUNTDOWN=30;
+  var gOff=0, gPoll=null, gTick=null, gLast={}, gClientRound="", gSubRound=null, gMyC=0, gAuto=null, gRoundData={}, gReveal={};
+
+  function lhResolveUrl(){ if(!LH_URL){ LH_URL=DEFAULT_LH_URL || (function(){try{return localStorage.getItem('lh_url')||'';}catch(e){return '';}})(); } }
+  function startLighthouse(){ lhResolveUrl(); if(!LH_URL){ go('lhSetup'); return; } lhBegin(); }
+  function lhSaveUrl(){ var u=$('lhUrlIn').value.trim(); if(!u){ $('lhSetErr').style.display='block'; $('lhSetErr').textContent='주소를 입력하세요.'; return; }
+    LH_URL=u; try{ localStorage.setItem('lh_url',u); }catch(e){} lhBegin(); }
+
+  async function lhPost(action,payload){ var r=await fetch(LH_URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload))}); return JSON.parse(await r.text()); }
+  async function lhGet(params){ var qs=Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&');
+    var r=await fetch(LH_URL+(LH_URL.indexOf('?')>=0?'&':'?')+qs); return JSON.parse(await r.text()); }
+  function gNow(){ return Date.now()+gOff; }
+
+  async function lhBegin(){
+    try{ await lhPost('checkin',{session:fisher.session,group:fisher.group,studentId:fisher.studentId,avatar:fisher.avatar}); }catch(e){}
+    $('lhWaitAv').textContent=fisher.avatar; $('lhWaitLabel').textContent=fisher.session+' '+fisher.group;
+    gClientRound=""; gSubRound=null; gRoundData={}; gReveal={};
+    lhStartLoops(); go('lhWait');
+  }
+  function lhStartLoops(){ lhStopLoops(); lhPollOnce(); gPoll=setInterval(lhPollOnce,1500); gTick=setInterval(lhRender,250); }
+  function lhStopLoops(){ if(gPoll)clearInterval(gPoll); if(gTick)clearInterval(gTick); gPoll=gTick=null; }
+
+  async function lhPollOnce(){
+    try{
+      var st=await lhGet({action:'lobby',session:fisher.session,group:fisher.group});
+      if(st&&st.ok){ gLast=st; gOff=st.serverNow-Date.now(); }
+      if(gLast.phase==='playing' && gLast.roundStartedAt){
+        if(gNow()>=gLast.roundStartedAt+COUNTDOWN*1000){ await lhFetch(gLast.round); }
+      }
+      if(gLast.phase==='done'){ await lhFetch('자율1'); await lhFetch('자율2'); }
+    }catch(e){}
+  }
+  async function lhFetch(round){ try{ var r=await lhGet({action:'',session:fisher.session,group:fisher.group,round:round}); if(r&&r.ok) gReveal[round]=r.data||[]; }catch(e){} }
+
+  function lhRound(r){ return r==='자율1'?'1라운드':r==='자율2'?'2라운드':r; }
+  function lhTargetOf(){ return (gLast.capacity||gLast.count||0)*PER_CAP; }
+
+  function lhRender(){
+    if(!gLast.phase) return;
+    if(gLast.phase==='waiting'||gLast.phase==='ready'){
+      $('lhWaitAv').textContent=fisher.avatar; $('lhWaitLabel').textContent=fisher.session+' '+fisher.group;
+      $('lhCount').textContent=gLast.count; $('lhCap').textContent=gLast.capacity;
+      $('lhAvatars').textContent=(gLast.avatars||[]).join(' ');
+      $('lhRules').innerHTML=lhRulesHtml();
+      $('lhWaitNote').innerHTML=(gLast.phase==='ready')
+        ? '🎉 마을 사람들이 다 모였어요! <b style="color:var(--coral)">촌장이 시작하면</b> 등대 모금이 시작됩니다.'
+        : '마을 사람들이 모이는 중…';
+      go2('lhWait'); return;
+    }
+    if(gLast.phase==='done'){ lhShowDone(); go2('lhDone'); return; }
+    if(gLast.phase==='playing'){
+      var round=gLast.round;
+      if(round!==gClientRound){ gClientRound=round; gSubRound=null; gMyC=0; gAuto=null;
+        if($('lhAmt')) $('lhAmt').value=''; if($('lhInErr')) $('lhInErr').style.display='none';
+        $('lhInRound').textContent=lhRound(round); $('lhSubRound').textContent=lhRound(round); $('lhRevRound').textContent=lhRound(round);
+      }
+      var deadline=gLast.roundStartedAt+COUNTDOWN*1000;
+      var remain=Math.max(0,Math.ceil((deadline-gNow())/1000));
+      if(gSubRound!==round){
+        if(remain>0){ lhTimer('lhTimer',remain); $('lhMini').textContent='초기 100냥 · 목표 '+lhTargetOf()+'냥 · 성공 시 전원 +120냥'; go2('lhInput'); return; }
+        else{ if(gAuto!==round){ gAuto=round; lhSend(0,round); } gSubRound=round; gMyC=0; gRoundData[round]={contribution:0}; lhReveal(round); go2('lhReveal'); return; }
+      }else{
+        if(remain>0){ lhTimer('lhSubTimer',remain); go2('lhSubmitted'); return; }
+        else{ lhReveal(round); go2('lhReveal'); return; }
+      }
+    }
+  }
+  // 게임 내부 화면 전환(스크롤 유지)
+  function go2(id){ showOnly(id); }
+  function lhTimer(id,remain){ var el=$(id); el.textContent=remain; el.classList.toggle('low',remain<=10); }
+
+  function lhOnAmount(){ var v=$('lhAmt').value; gMyC=(v===''?0:Number(v)); }
+  function lhStep(d){ var cur=Number($('lhAmt').value)||0; var n=Math.min(100,Math.max(0,cur+d)); $('lhAmt').value=n; gMyC=n; $('lhInErr').style.display='none'; }
+  function lhSubmit(){
+    var raw=$('lhAmt').value.trim(), v=Number(raw);
+    if(raw===''||isNaN(v)){ lhErr('기부액을 숫자로 입력하세요.'); return; }
+    if(v<0||v>100){ lhErr('0~100냥 사이로 입력하세요.'); return; }
+    if(v%10!==0){ lhErr('10냥 단위로 입력하세요.'); return; }
+    $('lhInErr').style.display='none'; gMyC=v; gSubRound=gLast.round; gRoundData[gLast.round]={contribution:v}; lhSend(v,gLast.round); lhRender();
+  }
+  function lhErr(m){ var el=$('lhInErr'); el.style.display='block'; el.textContent=m; }
+  async function lhSend(amount,round){ try{ await lhPost('submit',{records:[{session:fisher.session,group:fisher.group,round:round,studentId:fisher.studentId,contribution:amount}]}); }catch(e){} }
+
+  function lhReveal(round){
+    var data=gReveal[round]||[]; var total=0; data.forEach(function(d){ total+=Number(d.contribution)||0; });
+    var target=(gLast.capacity||gLast.count||0)*PER_CAP; var built=total>=target && target>0;
+    var myC=(gRoundData[round]&&gRoundData[round].contribution!=null)?gRoundData[round].contribution:gMyC;
+    var fin=(INIT-myC)+(built?BENEFIT:0);
+    gRoundData[round]={contribution:myC,total:total,target:target,built:built,final:fin};
+    $('lhVerdict').className='verdict2 '+(built?'ok':'bad');
+    $('lhVerdict').textContent=built?'🗼 등대 건설 성공!':'🌊 등대를 세우지 못했어요';
+    $('lhTotal').textContent=total+'냥'; $('lhTarget').textContent=target+'냥'; $('lhFinalMoney').textContent=fin+'냥';
+  }
+  function lhShowDone(){
+    ['자율1','자율2'].forEach(function(r){ var data=gReveal[r]||[]; var total=0; data.forEach(function(d){total+=Number(d.contribution)||0;});
+      var target=(gLast.capacity||gLast.count||0)*PER_CAP; var built=total>=target&&target>0;
+      var myC=(gRoundData[r]&&gRoundData[r].contribution!=null)?gRoundData[r].contribution:null;
+      var fin=(myC!=null)?((INIT-myC)+(built?BENEFIT:0)):null;
+      gRoundData[r]=Object.assign(gRoundData[r]||{},{total:total,target:target,built:built,final:fin,contribution:myC}); });
+    var r1=gRoundData['자율1']||{}, r2=gRoundData['자율2']||{};
+    function ln(l,r){ if(r.total==null) return '<div class="rrow"><span>'+l+'</span><b>-</b></div>';
+      return '<div class="rrow"><span>'+l+'</span><b>'+r.total+' / '+r.target+'냥 · '+(r.built?'건설 ✅':'실패 ❌')+'</b></div>'; }
+    var f1=r1.final!=null?r1.final:'-', f2=r2.final!=null?r2.final:'-';
+    $('lhTrend').innerHTML=ln('1라운드',r1)+ln('2라운드',r2)
+      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e9d8;">나의 자금: <b>'+f1+'냥 → '+f2+'냥</b></div>';
+  }
+  function lhRulesHtml(){ var t=(gLast.capacity||gLast.count||0)*PER_CAP;
+    return '📜 <b>등대 세우기 규칙</b><br>· 각자 <b>100냥</b>으로 시작<br>· 모둠 총 모금액이 <b>'+t+'냥</b>(인원×50) 이상이면 등대 건설<br>· 성공 시 기부 여부와 상관없이 <b>전원 +120냥</b><br>· 실패 시 낸 돈은 돌려받지 못함<br>· 입력 <b>30초</b>, 미입력은 0냥'; }
+
+  function finishLighthouse(){
+    lhStopLoops();
+    var built=false, coop=false;
+    ['자율1','자율2'].forEach(function(r){ var d=gRoundData[r]; if(d&&d.built) built=true; });
+    ['자율1','자율2'].forEach(function(r){ var arr=gReveal[r]; if(arr&&arr.length && gRoundData[r]&&gRoundData[r].built){
+      if(arr.every(function(x){return Number(x.contribution)>0;}) && arr.length>=(gLast.capacity||arr.length)) coop=true; } });
+    saveProgress({lighthouse:'done', lhBuilt:built});
+    if(built) addBadge('lighthouse');
+    if(coop) addBadge('coop');
+    pendingWalk='lh';
+    go('map');
+  }
+
+  /* ===================== 어장 게임 ===================== */
+  var DEFAULT_FISH_URL = "";  // 선생님: 여기에 어장 .../exec 주소를 넣으면 URL 입력이 생략됩니다
+  var FISH_URL="";
+  var INIT_STOCK=100, MAX_PER=10, REGEN=0.5, CAP=100;
+  var FISH_ROUNDS=['어장1','어장2','어장3','어장4','어장5'];
+  var fOff=0, fPoll=null, fTick=null, fLast={}, fClientRound="", fSubRound=null, fMyH=0, fAuto=null, fAllData=[];
+
+  function fhResolveUrl(){ if(!FISH_URL){ FISH_URL=DEFAULT_FISH_URL || (function(){try{return localStorage.getItem('fish_url')||'';}catch(e){return '';}})(); } }
+  function startFishery(){ fhResolveUrl(); if(!FISH_URL){ go('fishSetup'); return; } fhBegin(); }
+  function fhSaveUrl(){ var u=$('fishUrlIn').value.trim(); if(!u){ $('fishSetErr').style.display='block'; $('fishSetErr').textContent='주소를 입력하세요.'; return; }
+    FISH_URL=u; try{ localStorage.setItem('fish_url',u); }catch(e){} fhBegin(); }
+  async function fhPost(action,payload){ var r=await fetch(FISH_URL,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload))}); return JSON.parse(await r.text()); }
+  async function fhGet(params){ var qs=Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&');
+    var r=await fetch(FISH_URL+(FISH_URL.indexOf('?')>=0?'&':'?')+qs); return JSON.parse(await r.text()); }
+  function fNow(){ return Date.now()+fOff; }
+
+  async function fhBegin(){
+    try{ await fhPost('checkin',{session:fisher.session,group:fisher.group,studentId:fisher.studentId,avatar:fisher.avatar}); }catch(e){}
+    $('fhWaitAv').textContent=fisher.avatar; $('fhWaitLabel').textContent=fisher.session+' '+fisher.group;
+    fClientRound=""; fSubRound=null; fAllData=[]; fAuto=null;
+    fhStartLoops(); go('fishWait');
+  }
+  function fhStartLoops(){ fhStopLoops(); fhPollOnce(); fPoll=setInterval(fhPollOnce,1500); fTick=setInterval(fhRender,250); }
+  function fhStopLoops(){ if(fPoll)clearInterval(fPoll); if(fTick)clearInterval(fTick); fPoll=fTick=null; }
+  async function fhPollOnce(){
+    try{
+      var st=await fhGet({action:'lobby',session:fisher.session,group:fisher.group});
+      if(st&&st.ok){ fLast=st; fOff=st.serverNow-Date.now(); }
+      var r=await fhGet({action:'',session:fisher.session,group:fisher.group});
+      if(r&&r.ok) fAllData=r.data||[];
+    }catch(e){}
+  }
+
+  function fhByRound(){ var m={}; fAllData.forEach(function(d){ (m[d.round]=m[d.round]||[]).push({studentId:d.studentId,h:fhClampH(d.contribution)}); }); return m; }
+  function fhClampH(v){ v=Math.floor(Number(v)||0); return Math.max(0,Math.min(MAX_PER,v)); }
+  function fhOutcome(round,startStock){
+    var reqs=(fhByRound()[round])||[]; var totalReq=0; reqs.forEach(function(d){ totalReq+=d.h; });
+    var byId={},caught=0;
+    if(startStock<=0){ reqs.forEach(function(d){ byId[d.studentId]=0; }); }
+    else if(totalReq<=startStock){ reqs.forEach(function(d){ byId[d.studentId]=d.h; caught+=d.h; }); }
+    else { reqs.forEach(function(d){ var a=Math.floor(d.h*startStock/totalReq); byId[d.studentId]=a; caught+=a; }); }
+    var remaining=Math.max(0,startStock-caught);
+    var nextStock=Math.min(CAP, remaining+Math.floor(remaining*REGEN));
+    return {startStock:startStock,totalReq:totalReq,caught:caught,remaining:remaining,nextStock:nextStock,byId:byId};
+  }
+  function fhStockAtStart(idx){ var s=INIT_STOCK; for(var i=0;i<idx;i++){ s=fhOutcome(FISH_ROUNDS[i],s).nextStock; } return s; }
+  function fhCumulative(idx){ var t=0; for(var i=0;i<=idx;i++){ var o=fhOutcome(FISH_ROUNDS[i],fhStockAtStart(i)); t+=(o.byId[fisher.studentId]||0); } return t; }
+
+  function fhRound(r){ var i=FISH_ROUNDS.indexOf(r); return i>=0?((i+1)+'일차 조업'):r; }
+
+  function fhRender(){
+    if(!fLast.phase) return;
+    if(fLast.phase==='waiting'||fLast.phase==='ready'){
+      $('fhWaitAv').textContent=fisher.avatar; $('fhWaitLabel').textContent=fisher.session+' '+fisher.group;
+      $('fhCount').textContent=fLast.count; $('fhCap').textContent=fLast.capacity;
+      $('fhAvatars').textContent=(fLast.avatars||[]).join(' ');
+      $('fhRules').innerHTML=fhRulesHtml();
+      $('fhWaitNote').innerHTML=(fLast.phase==='ready')
+        ? '🎉 마을 사람들이 다 모였어요! <b style="color:var(--coral)">촌장이 시작하면</b> 조업이 시작됩니다.'
+        : '마을 사람들이 모이는 중…';
+      showOnly('fishWait'); return;
+    }
+    if(fLast.phase==='done'){ fhShowDone(); showOnly('fishDone'); return; }
+    if(fLast.phase==='playing'){
+      var round=fLast.round, idx=FISH_ROUNDS.indexOf(round);
+      if(round!==fClientRound){ fClientRound=round; fSubRound=null; fMyH=0; fAuto=null;
+        if($('fhAmt')) $('fhAmt').value=''; if($('fhInErr')) $('fhInErr').style.display='none';
+        $('fhInRound').textContent=fhRound(round); $('fhColRound').textContent=fhRound(round);
+        $('fhSubRound').textContent=fhRound(round); $('fhRevRound').textContent=fhRound(round); }
+      var deadline=fLast.roundStartedAt+COUNTDOWN*1000;
+      var remain=Math.max(0,Math.ceil((deadline-fNow())/1000));
+      var startStock=fhStockAtStart(idx);
+      if(fSubRound!==round){
+        if(remain>0){
+          if(startStock<=0){ if(fAuto!==round){ fAuto=round; fhSend(0,round); } fSubRound=round; fMyH=0; lhTimer('fhColTimer',remain); showOnly('fishCollapsed'); return; }
+          lhTimer('fhTimer',remain); $('fhStock').textContent=startStock; $('fhBar').style.width=Math.round(startStock/CAP*100)+'%';
+          $('fhMini').textContent='적게 잡을수록 어장이 회복돼요 · 미입력은 0마리'; showOnly('fishInput'); return;
+        }else{ if(fAuto!==round){ fAuto=round; fhSend(0,round); } fSubRound=round; fMyH=0; fhShowReveal(idx); showOnly('fishReveal'); return; }
+      }else{
+        if(remain>0){ if(startStock<=0){ lhTimer('fhColTimer',remain); showOnly('fishCollapsed'); return; } lhTimer('fhSubTimer',remain); showOnly('fishSubmitted'); return; }
+        else{ fhShowReveal(idx); showOnly('fishReveal'); return; }
+      }
+    }
+  }
+
+  function fhOnAmount(){ var v=$('fhAmt').value; fMyH=(v===''?0:Number(v)); }
+  function fhStep(d){ var cur=Number($('fhAmt').value)||0; var n=Math.min(MAX_PER,Math.max(0,cur+d)); $('fhAmt').value=n; fMyH=n; $('fhInErr').style.display='none'; }
+  function fhSubmit(){
+    var raw=$('fhAmt').value.trim(), v=Number(raw);
+    if(raw===''||isNaN(v)){ fhErr('잡을 마리 수를 입력하세요.'); return; }
+    if(v<0||v>MAX_PER){ fhErr('0~10마리 사이로 입력하세요.'); return; }
+    if(v%1!==0){ fhErr('정수(마리)로 입력하세요.'); return; }
+    $('fhInErr').style.display='none'; fMyH=v; fSubRound=fLast.round; fhSend(v,fLast.round); fhRender();
+  }
+  function fhErr(m){ var el=$('fhInErr'); el.style.display='block'; el.textContent=m; }
+  async function fhSend(amount,round){
+    try{ await fhPost('submit',{records:[{session:fisher.session,group:fisher.group,round:round,studentId:fisher.studentId,contribution:amount}]});
+      fAllData.push({session:fisher.session,group:fisher.group,round:round,studentId:fisher.studentId,contribution:amount}); }catch(e){}
+  }
+
+  function fhShowReveal(idx){
+    var o=fhOutcome(FISH_ROUNDS[idx], fhStockAtStart(idx));
+    var collapsed=o.nextStock<=0;
+    $('fhVerdict').className='verdict2 '+(collapsed?'bad':'ok');
+    $('fhVerdict').textContent=collapsed?'🪸 어장이 붕괴했어요!':'🐟 어장이 유지됐어요';
+    $('fhRStart').textContent=o.startStock+'마리'; $('fhRCaught').textContent=o.caught+'마리';
+    $('fhRRemain').textContent=o.remaining+'마리'; $('fhRNext').textContent=o.nextStock+'마리 (번식 +'+(o.nextStock-o.remaining)+')';
+    var mine=o.byId[fisher.studentId]||0; $('fhRMine').textContent=mine+' / '+fhCumulative(idx)+'마리';
+  }
+  function fhShowDone(){
+    var html='', s=INIT_STOCK, played=0;
+    for(var i=0;i<FISH_ROUNDS.length;i++){
+      var has=fAllData.some(function(d){return d.round===FISH_ROUNDS[i];}); if(!has) break;
+      var o=fhOutcome(FISH_ROUNDS[i], s); played++;
+      html+='<div class="rrow"><span>'+(i+1)+'일차</span><b>시작 '+o.startStock+' → 어획 '+o.caught+' → 남음 '+o.remaining+'</b></div>';
+      s=o.nextStock;
+    }
+    var pct=Math.round(s/CAP*100);
+    $('fhDoneIcon').textContent = s<=0?'🪸':'🐟';
+    html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0e9d8;">나의 누적 어획: <b style="color:var(--sea)">'+fhCumulative(FISH_ROUNDS.length-1)+'마리</b><br>마지막 어장: <b>'+s+'마리 ('+pct+'%)</b> '+(s<=0?'🪸 붕괴':'🐟 유지')+'</div>';
+    $('fhTrend').innerHTML=html;
+  }
+  function fhRulesHtml(){
+    return '📜 <b>어장 조업 규칙</b><br>· 공동 어장에 물고기 <b>100마리</b>로 시작<br>· 매 일차 각자 <b>0~10마리</b> 비밀 조업<br>· 조업 후 <b>남은 물고기의 50%가 번식</b> (최대 100)<br>· 어장이 <b>0이 되면 붕괴</b> → 이후엔 못 잡음<br>· 30초, 미입력은 0마리 · <b>5일 동안</b> 많이 잡되 어장 지키기';
+  }
+  function finishFishery(){
+    fhStopLoops();
+    var s=INIT_STOCK, played=0;
+    for(var i=0;i<FISH_ROUNDS.length;i++){ if(!fAllData.some(function(d){return d.round===FISH_ROUNDS[i];})) break; s=fhOutcome(FISH_ROUNDS[i],s).nextStock; played++; }
+    var survived = played>0 && s>0;
+    saveProgress({fishery:'done', fishSurvived:survived, fishPct:Math.round(s/CAP*100)});
+    if(survived) addBadge('fishery');
+    pendingWalk='fish';
+    go('map');
+  }
+
+  /* 시작 시: 이미 등록했으면 바로 지도로 갈지 물어보지 않고 스플래시 유지(닉네임만 기억) */
+</script>
+</body>
+</html>
