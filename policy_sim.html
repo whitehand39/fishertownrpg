@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>정책 실험실 · 어장 지키기</title>
+<style>
+  :root{ --teal:#0e8c94; --amber:#f2a53c; --ok:#1f8f4e; --bad:#d0503a; --ink:#0c2a30; --line:#cfe0e2; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+    background:linear-gradient(180deg,#083038,#0d6b74); color:#eafafa; min-height:100vh;}
+  .wrap{max-width:560px; margin:0 auto; padding:20px 16px 50px;}
+  h1{font-size:22px; margin:0 0 4px; text-align:center;}
+  .lead{text-align:center; color:#a9dede; font-size:13.5px; margin:0 0 16px; line-height:1.6;}
+  .card{background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:16px; margin-bottom:14px;}
+  .ctrl-title{font-weight:800; font-size:14px; margin-bottom:4px;}
+  .ctrl-sub{font-size:12px; color:#a9dede; margin-bottom:10px;}
+  .rowflex{display:flex; align-items:center; gap:12px;}
+  input[type=range]{-webkit-appearance:none; flex:1; height:10px; background:#062226; border-radius:6px; padding:0;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:32px; height:32px; border-radius:50%; background:var(--teal); border:3px solid #fff;}
+  .bigval{font-size:30px; font-weight:900; color:var(--teal); min-width:96px; text-align:right; font-variant-numeric:tabular-nums;}
+  .bigval small{font-size:14px; color:#cfeeee;}
+  .days{display:flex; gap:7px; margin-top:6px;}
+  .day{flex:1; text-align:center; padding:9px 0; border-radius:10px; background:rgba(255,255,255,.08); border:2px solid transparent; font-size:13px; font-weight:700; cursor:pointer; color:#eafafa; font-family:inherit; -webkit-appearance:none; appearance:none;}
+  .day:active{transform:translateY(1px);}
+  .day.closed{background:rgba(242,165,60,.85); border-color:#ffcf8a; color:#3a2200;}
+  .num{width:70px; padding:9px; font-size:16px; border:none; border-radius:8px; text-align:center; background:#eafafa; color:#0c2a30; font-weight:800;}
+  .chartwrap{background:rgba(0,0,0,.16); border-radius:12px; padding:8px 6px 2px;}
+  .result{display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;}
+  .stat{flex:1; min-width:130px; background:rgba(255,255,255,.06); border-radius:12px; padding:12px; text-align:center;}
+  .stat .n{font-size:26px; font-weight:900;} .stat .l{font-size:12px; color:#a9dede; margin-top:2px;}
+  .stat.ok .n{color:#7ff0bd;} .stat.bad .n{color:#ff9f92;} .stat.teal .n{color:var(--teal);}
+  .insight{margin-top:12px; padding:12px 14px; border-radius:12px; font-size:14px; line-height:1.6; font-weight:600;}
+  .insight.ok{background:rgba(62,207,142,.16); color:#bff3d7;}
+  .insight.bad{background:rgba(226,87,76,.16); color:#ffc4bd;}
+  .insight.warn{background:rgba(242,165,60,.16); color:#ffe2bb;}
+  .legend{display:flex; gap:16px; justify-content:center; font-size:12px; color:#cfeeee; margin-top:4px;}
+  .legend span{display:flex; align-items:center; gap:5px;}
+  .swatch{width:16px; height:3px; border-radius:2px;} .swatch.p{background:#5ee0c4;} .swatch.b{background:#9fb6bb;}
+  .btn{width:100%; padding:12px; margin-top:6px; border:none; border-radius:10px; background:rgba(255,255,255,.12); color:#eafafa; font-weight:800; font-size:14px; cursor:pointer;}
+  .foot{font-size:12.5px; color:#a9dede; line-height:1.6; margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏛️ 정책 실험실</h1>
+  <p class="lead">시장 자율로는 어장이 붕괴했어요.<br>정부가 <b>규칙</b>을 넣으면 어장을 지킬 수 있을까요? 규칙을 바꿔가며 <b>5일 뒤</b> 어장을 확인해 보세요.</p>
+
+  <div class="card">
+    <div class="ctrl-title">① 어획 쿼터 (1인당 하루 최대)</div>
+    <div class="ctrl-sub">정부가 한 사람이 하루에 잡을 수 있는 물고기 수를 제한합니다.</div>
+    <div class="rowflex">
+      <input type="range" id="quota" min="0" max="10" step="1" value="10" oninput="update()">
+      <div class="bigval"><span id="quotaVal">10</span><small>마리</small></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ctrl-title">② 금어기 (조업 금지일)</div>
+    <div class="ctrl-sub">누르면 그 날은 조업 금지 → 어장이 쉬며 번식합니다.</div>
+    <div class="days" id="days"></div>
+    <div id="closedInfo" style="margin-top:10px; font-size:13px; font-weight:700; color:#ffd9a8;">현재 금어기: 없음</div>
+  </div>
+
+  <div class="card">
+    <div class="ctrl-title">인원 (모둠 크기)</div>
+    <div class="rowflex" style="margin-top:6px;">
+      <input type="number" id="people" class="num" min="1" max="10" value="5" oninput="update()"> <span style="font-size:14px;color:#cfeeee;">명이 함께 조업</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chartwrap"><div id="chart"></div></div>
+    <div class="legend"><span><span class="swatch p"></span>선택한 규칙</span><span><span class="swatch b"></span>규제 없음(각자 10마리)</span></div>
+    <div class="result">
+      <div class="stat" id="stFinal"><div class="n">–</div><div class="l">5일 뒤 어장</div></div>
+      <div class="stat teal" id="stCatch"><div class="n">–</div><div class="l">마을 5일 총 어획</div></div>
+    </div>
+    <div class="insight" id="insight"></div>
+    <button class="btn" onclick="reset()">↺ 규제 없음으로 되돌리기</button>
+  </div>
+
+  <div class="card">
+    <div class="ctrl-title">🗣️ 함께 생각해볼 것</div>
+    <p class="foot">규칙으로 어장을 지킬 수 있지만, 공짜는 아니에요. 쿼터·금어기는 <b>개인의 자유를 제한</b>하고, 지키는지 <b>감시·단속하는 비용</b>이 듭니다. "정부 개입은 언제나 정답일까?"도 토론해 보세요.</p>
+  </div>
+</div>
+
+<script>
+  var START=100, REGEN=0.5, CAP=100, DAYS=5;
+  var closed={1:false,2:false,3:false,4:false,5:false};
+
+  function buildDays(){
+    var box=document.getElementById('days'); box.innerHTML='';
+    for(var d=1; d<=DAYS; d++){ (function(d){
+      var el=document.createElement('button');
+      el.type='button'; el.className='day'; el.textContent=d+'일'; el.setAttribute('data-day',d);
+      el.addEventListener('click', function(){
+        closed[d]=!closed[d];   // 데이터만 바꾼다
+        update();               // 색·그래프·글자는 update가 데이터 기준으로 다시 그림
+      });
+      box.appendChild(el);
+    })(d); }
+    syncDayButtons();
+  }
+  function syncDayButtons(){
+    var btns=document.querySelectorAll('#days .day');
+    for(var i=0;i<btns.length;i++){ btns[i].classList.toggle('closed', !!closed[i+1]); }
+  }
+
+  function sim(n, quota, closedMap){
+    var s=START, levels=[START], cum=0;
+    for(var d=1; d<=DAYS; d++){
+      var perCap = closedMap[d] ? 0 : quota;
+      var caught = Math.min(s, n*perCap);
+      cum += caught;
+      var rem = s - caught;
+      s = Math.min(CAP, Math.floor(rem*(1+REGEN)));
+      levels.push(s);
+    }
+    return {levels:levels, cum:cum, finalPct:Math.round(s/CAP*100), collapsed:s<=0};
+  }
+
+  function chartSVG(policy, base, closedMap){
+    var W=440,H=240,pl=32,pr=14,pt=14,pb=26;
+    function X(d){ return pl + d/DAYS*(W-pl-pr); }
+    function Y(v){ return H-pb - v/100*(H-pt-pb); }
+    var g='';
+    // 금어기 날 세로 음영 (d-1 ~ d 구간)
+    for(var cd=1; cd<=DAYS; cd++){ if(closedMap[cd]){
+      var x0=X(cd-1), x1=X(cd);
+      g+='<rect x="'+x0+'" y="'+pt+'" width="'+(x1-x0)+'" height="'+(H-pt-pb)+'" fill="rgba(242,165,60,.18)"/>';
+      g+='<text x="'+((x0+x1)/2)+'" y="'+(pt+12)+'" fill="#ffd9a8" font-size="10" text-anchor="middle">금어기</text>';
+    }}
+    [0,25,50,75,100].forEach(function(v){ var y=Y(v);
+      g+='<line x1="'+pl+'" y1="'+y+'" x2="'+(W-pr)+'" y2="'+y+'" stroke="rgba(255,255,255,.12)"/>';
+      g+='<text x="'+(pl-5)+'" y="'+(y+4)+'" fill="#a9dede" font-size="11" text-anchor="end">'+v+'</text>';
+    });
+    for(var d=0; d<=DAYS; d++){ g+='<text x="'+X(d)+'" y="'+(H-8)+'" fill="#a9dede" font-size="11" text-anchor="middle">'+d+'일</text>'; }
+    function poly(levels,color,dash){
+      var pts=levels.map(function(v,i){ return X(i)+','+Y(v); }).join(' ');
+      var s='<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="3" '+(dash?'stroke-dasharray="5 5" opacity=".7"':'')+' stroke-linejoin="round"/>';
+      if(!dash){ levels.forEach(function(v,i){ s+='<circle cx="'+X(i)+'" cy="'+Y(v)+'" r="4" fill="'+color+'"/>'; }); }
+      return s;
+    }
+    g+=poly(base.levels,'#9fb6bb',true);
+    g+=poly(policy.levels,'#5ee0c4',false);
+    // 최종값 라벨
+    var fv=policy.levels[DAYS];
+    g+='<text x="'+(X(DAYS)-6)+'" y="'+(Y(fv)-8)+'" fill="#7ff0bd" font-size="13" font-weight="800" text-anchor="end">'+fv+'</text>';
+    return '<svg viewBox="0 0 '+W+' '+H+'" width="100%">'+g+'</svg>';
+  }
+
+  function update(){
+    var q=Number(document.getElementById('quota').value);
+    var n=Math.max(1,Math.min(10,Number(document.getElementById('people').value)||5));
+    document.getElementById('quotaVal').textContent=q;
+    var policy=sim(n,q,closed);
+    var base=sim(n,10,{1:false,2:false,3:false,4:false,5:false});
+    document.getElementById('chart').innerHTML=chartSVG(policy,base,closed);
+
+    // 금어기 상태 텍스트 + 버튼 색 재동기화(데이터 기준)
+    syncDayButtons();
+    var days=[]; for(var d=1; d<=DAYS; d++){ if(closed[d]) days.push(d+'일'); }
+    document.getElementById('closedInfo').textContent='현재 금어기: '+(days.length?days.join(' · '):'없음');
+
+    var sf=document.getElementById('stFinal'); var sc=document.getElementById('stCatch');
+    sf.className='stat '+(policy.collapsed?'bad':'ok');
+    sf.querySelector('.n').textContent=policy.finalPct+'%';
+    sf.querySelector('.l').textContent=policy.collapsed?'🪸 붕괴':'🐟 유지';
+    sc.querySelector('.n').textContent=policy.cum+'마리';
+
+    var ins=document.getElementById('insight');
+    var noRule = (q===10 && !anyClosed());
+    if(noRule){ ins.className='insight bad'; ins.innerHTML='규제가 없으면 다 같이 남획해 어장이 <b>'+(policy.collapsed?'붕괴':'급감')+'</b>합니다. 규칙을 넣어보세요.'; }
+    else if(policy.collapsed){ ins.className='insight bad'; ins.innerHTML='이 규칙으로도 어장이 <b>붕괴</b>했어요. 쿼터를 더 낮추거나 금어기를 넣어보세요.'; }
+    else if(policy.cum>=base.cum){ ins.className='insight ok'; ins.innerHTML='어장을 지키면서 5일 총 어획이 규제 없음(<b>'+base.cum+'마리</b>)보다 <b>많아요!</b> 남획은 단기 이득처럼 보여도 결국 손해예요.'; }
+    else{ ins.className='insight warn'; ins.innerHTML='어장은 지켰지만 총 어획('+policy.cum+')이 규제 없음('+base.cum+')보다 적어요. 쿼터를 조금 <b>높여</b> 최적점을 찾아보세요.'; }
+  }
+  function anyClosed(){ return Object.keys(closed).some(function(k){return closed[k];}); }
+  function reset(){ document.getElementById('quota').value=10; document.getElementById('people').value=5;
+    for(var d=1; d<=DAYS; d++){ closed[d]=false; } buildDays(); update(); }
+
+  buildDays(); update();
+</script>
+</body>
+</html>
