@@ -271,7 +271,16 @@
         <g fill="#c7c2b8"><ellipse cx="430" cy="505" rx="20" ry="12"/><ellipse cx="600" cy="500" rx="16" ry="10"/></g>
         <!-- 장식 집 -->
         <g transform="translate(250,180)"><rect x="-17" y="-11" width="34" height="22" fill="#f6f2ea"/><polygon points="-21,-11 0,-26 21,-11" fill="#6fa8d6"/><rect x="-4" y="-1" width="8" height="12" fill="#8a5a2b"/></g>
-        <g transform="translate(600,175)"><rect x="-15" y="-10" width="30" height="20" fill="#f6f2ea"/><polygon points="-19,-10 0,-23 19,-10" fill="#e79a5a"/><rect x="-4" y="0" width="8" height="10" fill="#8a5a2b"/></g>
+        <!-- 건물: 등대지기의 집 -->
+        <g class="node lock" id="diaryNode" onclick="diaryClick()">
+          <circle id="diaryGlow" class="glow" cx="600" cy="175" r="40" fill="#f0b03c" style="display:none;"/>
+          <text id="diaryPin" class="herepin" x="600" y="122" font-size="12" font-weight="800" fill="#c9821e" text-anchor="middle" style="display:none;">여기! ▼</text>
+          <rect x="585" y="165" width="30" height="20" fill="#f6f2ea"/><polygon points="581,165 600,152 619,165" fill="#e79a5a"/><rect x="596" y="175" width="8" height="10" fill="#8a5a2b"/>
+          <g id="diaryLock"><circle cx="617" cy="163" r="10" fill="#c9bfa8"/><text x="617" y="167" font-size="10" text-anchor="middle">🔒</text></g>
+          <g id="diaryChk" style="display:none;"><circle cx="617" cy="163" r="10" fill="#3ea864"/><text x="617" y="167" font-size="12" fill="#fff" text-anchor="middle" font-weight="800">✓</text></g>
+          <text class="nlabel" x="600" y="204" text-anchor="middle" font-size="13">등대지기의 집</text>
+          <text class="nsub" x="600" y="218" text-anchor="middle" font-size="10">성찰 일지 쓰기</text>
+        </g>
         <g transform="translate(800,430)"><rect x="-15" y="-10" width="30" height="20" fill="#f6f2ea"/><polygon points="-19,-10 0,-23 19,-10" fill="#6fa8d6"/><rect x="-4" y="0" width="8" height="10" fill="#8a5a2b"/></g>
         <!-- 야자수 -->
         <g transform="translate(180,300)"><path d="M-3 0 q-2 -14 2 -26" stroke="#a9744f" stroke-width="6" fill="none" stroke-linecap="round"/><g fill="#57b268" transform="translate(1,-26)"><ellipse cx="0" cy="0" rx="18" ry="6"/><ellipse cx="0" cy="0" rx="6" ry="16"/><ellipse cx="0" cy="0" rx="15" ry="6" transform="rotate(45)"/><ellipse cx="0" cy="0" rx="15" ry="6" transform="rotate(-45)"/></g></g>
@@ -598,7 +607,32 @@
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;" class="center">
       <div style="font-size:66px;">🎉</div>
       <h1 style="font-size:23px;margin-top:6px;">정책 제안서 제출 완료!</h1>
-      <div class="card"><p style="margin:0;font-size:14px;color:#6b5a44;">등대말의 어부로서 긴 여정을 모두 마쳤어요.<br>시장 실패를 겪고, 스스로 해결책까지 제안했답니다. 멋져요!</p></div>
+      <div class="card"><p style="margin:0;font-size:14px;color:#6b5a44;">시장 실패를 겪고, 스스로 해결책까지 제안했어요.<br>이제 등대지기의 집에서 오늘 하루를 돌아볼까요?</p></div>
+      <button class="btn gold" onclick="go('map')">🗺️ 마을 지도로</button>
+    </div>
+  </div>
+
+  <!-- ===== 등대지기의 집(성찰 일지) ===== -->
+  <div class="screen" id="diaryForm">
+    <button class="admin-btn ghost" onclick="go('map')">← 지도로</button>
+    <h1 style="font-size:22px;">📖 등대지기의 집</h1>
+    <p class="tagline">오늘의 나를 돌아보는 시간</p>
+
+    <div class="card">
+      <div class="qtitle">📝 성찰 일지</div>
+      <div class="starter">오늘 나는 '정책연구원'이 되어 정부의 입장에서 규칙을 제안했다.<br>그런데 나는 소비자·미래의 노동자·기업가로서 공공재와 공유자원을 대할 때 어떤 태도를 가져야 할까?<br>오늘 겪은 일을 떠올리며 한두 문장으로 적어보자.</div>
+      <textarea class="pta" id="dJournal" style="min-height:140px;" placeholder="예: 나는 앞으로 공동의 자원을 쓸 때 '나 하나쯤'이라는 생각 대신…"></textarea>
+    </div>
+
+    <button class="btn sea" id="dSubmitBtn" onclick="submitDiary()">📤 성찰 일지 제출</button>
+    <div class="err" id="dErr"></div>
+  </div>
+
+  <div class="screen" id="diaryDone">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;" class="center">
+      <div style="font-size:66px;">🏮</div>
+      <h1 style="font-size:23px;margin-top:6px;">등대말 여정 완주!</h1>
+      <div class="card"><p style="margin:0;font-size:14px;color:#6b5a44;">등록부터 등대·어장·정책 제안, 성찰 일지까지<br>긴 여정을 모두 마쳤어요. 정말 멋진 어부였어요! 🎉</p></div>
       <button class="btn gold" onclick="go('map')">🗺️ 마을 지도로</button>
     </div>
   </div>
@@ -639,7 +673,7 @@
   var fisher=null, selectedAvatar='';
 
   function $(id){return document.getElementById(id);}
-  var ALL_SCREENS=['splash','adminLogin','adminHub','register','map','chief','lhSetup','lhWait','lhInput','lhSubmitted','lhReveal','lhDone','fishSetup','fishWait','fishInput','fishCollapsed','fishSubmitted','fishReveal','fishDone','policyForm','policyDone'];
+  var ALL_SCREENS=['splash','adminLogin','adminHub','register','map','chief','lhSetup','lhWait','lhInput','lhSubmitted','lhReveal','lhDone','fishSetup','fishWait','fishInput','fishCollapsed','fishSubmitted','fishReveal','fishDone','policyForm','policyDone','diaryForm','diaryDone'];
   function showOnly(id){ ALL_SCREENS.forEach(function(s){ var el=$(s); if(el) el.classList.toggle('on', s===id); }); window.scrollTo(0,0); }
   function go(id){ showOnly(id); if(id==='map'){ paintMap(); } }
 
@@ -693,8 +727,8 @@
   function getBadges(){ try{ return JSON.parse(localStorage.getItem('ddm_badges')||'[]'); }catch(e){ return []; } }
   function addBadge(id){ var b=getBadges(); if(b.indexOf(id)<0){ b.push(id); try{ localStorage.setItem('ddm_badges',JSON.stringify(b)); }catch(e){} } }
 
-  var REST={ '회의소':{x:300,y:300}, '수협':{x:500,y:410}, '실험실':{x:700,y:300}, '정책제안소':{x:882,y:410} };
-  var NODEPT={ '등록소':{x:120,y:360}, '회의소':{x:320,y:250}, '수협':{x:520,y:360}, '실험실':{x:720,y:250}, '정책제안소':{x:900,y:360} };
+  var REST={ '회의소':{x:300,y:300}, '수협':{x:500,y:410}, '실험실':{x:700,y:300}, '정책제안소':{x:882,y:410}, '등대지기의집':{x:600,y:210} };
+  var NODEPT={ '등록소':{x:120,y:360}, '회의소':{x:320,y:250}, '수협':{x:520,y:360}, '실험실':{x:720,y:250}, '정책제안소':{x:900,y:360}, '등대지기의집':{x:600,y:175} };
   var pendingWalk=null;
 
   /* 지도 */
@@ -745,7 +779,16 @@
       if($('jebanGlow')) $('jebanGlow').style.display='none';
       if($('jebanPin')) $('jebanPin').style.display='none';
       if($('jebanChk')) $('jebanChk').style.display='';
-      if(lm){ lm.style.display='block'; lm.textContent='📜 정책 제안서까지 제출 완료! 긴 여정을 모두 마쳤어요 🎉'; }
+      var dn=$('diaryNode'); if(dn) dn.classList.remove('lock');
+      if($('diaryLock')) $('diaryLock').style.display='none';
+      if(p.reflection!=='done'){ if($('diaryGlow')) $('diaryGlow').style.display=''; if($('diaryPin')) $('diaryPin').style.display=''; }
+      if(lm){ lm.style.display='block'; lm.textContent='📜 정책 제안서까지 제출 완료! 등대지기의 집에서 오늘을 돌아보세요.'; }
+    }
+    if(p.reflection==='done'){
+      if($('diaryGlow')) $('diaryGlow').style.display='none';
+      if($('diaryPin')) $('diaryPin').style.display='none';
+      if($('diaryChk')) $('diaryChk').style.display='';
+      if(lm){ lm.style.display='block'; lm.textContent='📖 성찰 일지까지 완성! 긴 여정을 모두 마쳤어요 🎉'; }
     }
 
     // 뱃지
@@ -755,9 +798,9 @@
       else { br.style.display='none'; } }
 
     // 어부 위치/걷기
-    var restNode = (p.policy==='done') ? '정책제안소' : (p.fishery==='done') ? '실험실' : (p.lighthouse==='done' ? '수협' : '회의소');
+    var restNode = (p.proposal==='done') ? '등대지기의집' : (p.policy==='done') ? '정책제안소' : (p.fishery==='done') ? '실험실' : (p.lighthouse==='done' ? '수협' : '회의소');
     if(pendingWalk && mf){
-      var seg={ lh:['회의소','수협'], fish:['수협','실험실'], exp:['실험실','정책제안소'] }[pendingWalk] || ['회의소','수협'];
+      var seg={ lh:['회의소','수협'], fish:['수협','실험실'], exp:['실험실','정책제안소'], diary:['정책제안소','등대지기의집'] }[pendingWalk] || ['회의소','수협'];
       pendingWalk=null;
       walkFisher(seg[0], seg[1], function(){ placeFisher(restNode); });
     } else { placeFisher(restNode); }
@@ -776,7 +819,7 @@
   function walkDemo(){
     if(!fisher){ fisher={session:'테스트',group:'1모둠',studentId:'0000',name:'테스트',nickname:'냥이',avatar:'cheese'}; }
     go('map');
-    setTimeout(function(){ walkFisher('등록소','회의소', function(){ walkFisher('회의소','수협', function(){ walkFisher('수협','실험실', function(){ walkFisher('실험실','정책제안소', function(){ placeFisher('정책제안소'); }); }); }); }); }, 250);
+    setTimeout(function(){ walkFisher('등록소','회의소', function(){ walkFisher('회의소','수협', function(){ walkFisher('수협','실험실', function(){ walkFisher('실험실','정책제안소', function(){ walkFisher('정책제안소','등대지기의집', function(){ placeFisher('등대지기의집'); }); }); }); }); }); }, 250);
   }
 
   function suhClick(){ if(progress().lighthouse==='done'){ openFisheryChief(); } else { lockedMsg(); } }
@@ -837,7 +880,7 @@
     pendingWalk='exp'; go('map');
   }
   /* ===================== 등대 게임 ===================== */
-  var DEFAULT_LH_URL = "https://script.google.com/macros/s/AKfycbzZsj0wwOGh9VyGx7XiQFmN9oSdEV-SZ5CchqXhgSHZloLSRFJ1haj3Yna3VBZWHYAP/exec";   // 선생님: 여기에 등대 .../exec 주소를 넣으면 URL 입력이 생략됩니다
+  var DEFAULT_LH_URL = "";   // 선생님: 여기에 등대 .../exec 주소를 넣으면 URL 입력이 생략됩니다
   var LH_URL="";
   var INIT=100, BENEFIT=120, PER_CAP=50, COUNTDOWN=30;
   var gOff=0, gPoll=null, gTick=null, gLast={}, gClientRound="", gSubRound=null, gMyC=0, gAuto=null, gRoundData={}, gReveal={};
@@ -962,7 +1005,7 @@
   }
 
   /* ===================== 어장 게임 ===================== */
-  var DEFAULT_FISH_URL = "https://script.google.com/macros/s/AKfycbyxmMVmdWUdtvvmwy1TPnXZ78elB2zQhkQdLUtzZZBlRFatWqTlfljRTb-PYmAbKrY/exec";  // 선생님: 여기에 어장 .../exec 주소를 넣으면 URL 입력이 생략됩니다
+  var DEFAULT_FISH_URL = "";  // 선생님: 여기에 어장 .../exec 주소를 넣으면 URL 입력이 생략됩니다
   var FISH_URL="";
   var INIT_STOCK=100, MAX_PER=10, REGEN=0.5, CAP=100;
   var FISH_ROUNDS=['어장1','어장2','어장3','어장4','어장5'];
@@ -1098,7 +1141,7 @@
   }
 
   /* ===================== 정책 제안소(마을 회관) ===================== */
-  var DEFAULT_POLICY_URL = "https://script.google.com/macros/s/AKfycbymfb3VErgSZ3eYIhry-kNV-irHJKqXT8VdKg96OXJLkLCGKSCU0oPoUKqRvlirI_yE/exec";  // 선생님: 정책 서버 .../exec 주소를 넣으세요(2단계 AI 채점과 같은 시트)
+  var DEFAULT_POLICY_URL = "";  // 선생님: 정책 서버 .../exec 주소를 넣으세요(2단계 AI 채점과 같은 시트)
   var POLICY_URL="";
   var AUDIENCES=['어민 대표','국회의원','환경단체'];
   var selectedAudience="";
@@ -1150,6 +1193,31 @@
       showOnly('policyDone');
     }catch(e){ pErr('제출 실패: '+e.message+' (네트워크나 서버 주소를 확인해 주세요)'); }
     if(btn){ btn.disabled=false; btn.textContent='📤 정책 제안서 제출'; }
+  }
+
+  /* ===================== 등대지기의 집(성찰 일지) ===================== */
+  function diaryClick(){ if(progress().proposal==='done'){ openDiaryChief(); } else { lockedMsg(); } }
+  function openDiaryChief(){ openChief({ face:'🧓', name:'등대말 촌장', startLabel:'📖 성찰 일지 쓰러 가기', startFn:openDiaryForm, lines:[
+    "고생 많았네, 자네. 등대를 세우고, 어장을 지키려 애쓰고, 정책까지 제안했지.",
+    "저기 언덕 위 등대지기의 집에서, 잠시 앉아 오늘 하루를 돌아보게.",
+    "정책연구원이 아니라 그냥 '자네' 자신으로서 말이야. 짧아도 좋으니 솔직하게 적어보게."
+  ]}); }
+  function openDiaryForm(){ $('dJournal').value=''; $('dErr').style.display='none'; showOnly('diaryForm'); }
+  function dErr(m){ var el=$('dErr'); el.style.display='block'; el.textContent=m; }
+  async function submitDiary(){
+    policyResolveUrl();
+    var text=$('dJournal').value.trim();
+    if(!text){ dErr('한두 문장이라도 적어 주세요.'); return; }
+    if(!POLICY_URL){ dErr('선생님께: 서버 주소가 아직 설정되지 않았어요.'); return; }
+    $('dErr').style.display='none';
+    var btn=$('dSubmitBtn'); if(btn){ btn.disabled=true; btn.textContent='제출 중…'; }
+    try{
+      await policyPost('reflection',{ session:fisher.session, group:fisher.group, studentId:fisher.studentId, name:fisher.name, nickname:fisher.nickname, journal:text });
+      saveProgress({reflection:'done'});
+      pendingWalk='diary';
+      showOnly('diaryDone');
+    }catch(e){ dErr('제출 실패: '+e.message+' (네트워크나 서버 주소를 확인해 주세요)'); }
+    if(btn){ btn.disabled=false; btn.textContent='📤 성찰 일지 제출'; }
   }
 
   /* 시작 시: 이미 등록했으면 바로 지도로 갈지 물어보지 않고 스플래시 유지(닉네임만 기억) */
